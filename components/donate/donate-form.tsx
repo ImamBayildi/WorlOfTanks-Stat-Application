@@ -11,9 +11,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string)
+let stripePromise: ReturnType<typeof loadStripe> | null = null
+function getStripe(publishableKey: string) {
+  stripePromise ??= loadStripe(publishableKey)
+  return stripePromise
+}
 
-export function DonateForm() {
+export function DonateForm({ publishableKey }: { publishableKey: string }) {
   const [selected, setSelected] = useState<number | null>(10)
   const [custom, setCustom] = useState("")
   const [checkoutAmount, setCheckoutAmount] = useState<number | null>(null)
@@ -22,7 +26,13 @@ export function DonateForm() {
   const valid = isValidDonationAmount(amount)
 
   if (checkoutAmount !== null) {
-    return <DonationCheckout amount={checkoutAmount} onBack={() => setCheckoutAmount(null)} />
+    return (
+      <DonationCheckout
+        amount={checkoutAmount}
+        publishableKey={publishableKey}
+        onBack={() => setCheckoutAmount(null)}
+      />
+    )
   }
 
   return (
@@ -96,7 +106,15 @@ export function DonateForm() {
   )
 }
 
-function DonationCheckout({ amount, onBack }: { amount: number; onBack: () => void }) {
+function DonationCheckout({
+  amount,
+  publishableKey,
+  onBack,
+}: {
+  amount: number
+  publishableKey: string
+  onBack: () => void
+}) {
   const idempotencyKey = useMemo(() => crypto.randomUUID(), [])
   const fetchClientSecret = useCallback(
     () => startDonationSession(amount, idempotencyKey),
@@ -113,7 +131,7 @@ function DonationCheckout({ amount, onBack }: { amount: number; onBack: () => vo
         <span className="font-mono text-sm tabular-nums text-muted-foreground">{`$${amount} USD`}</span>
       </div>
       <div id="checkout" className="overflow-hidden rounded-lg bg-white">
-        <EmbeddedCheckoutProvider stripe={stripePromise} options={{ fetchClientSecret }}>
+        <EmbeddedCheckoutProvider stripe={getStripe(publishableKey)} options={{ fetchClientSecret }}>
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>
       </div>

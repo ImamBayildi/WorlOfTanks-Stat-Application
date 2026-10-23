@@ -14,6 +14,7 @@ const REASONS = [
 ]
 
 export default function DonatePage() {
+  const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   return (
     <main className="mx-auto grid w-full max-w-5xl gap-10 px-4 py-10 lg:grid-cols-[1fr_440px] lg:items-start">
       <section className="flex flex-col gap-6">
@@ -40,7 +41,11 @@ export default function DonatePage() {
       </section>
 
       <section aria-label="Bağış formu" className="rounded-xl border border-border bg-card p-5 sm:p-6">
-        <DonateForm />
+        {publishableKey ? (
+          <DonateForm publishableKey={publishableKey} />
+        ) : (
+          <p className="text-sm text-muted-foreground">Bağış sistemi şu anda yapılandırılmamış.</p>
+        )}
       </section>
     </main>
   )
