@@ -11,9 +11,7 @@ export interface SearchResult {
   nickname: string
   battles: number
   winRate: number | null
-  avgDamage: number | null
-  lastBattleAt: number | null
-  ratings: Ratings
+  wgRating: number | null
 }
 
 export interface TankRow {

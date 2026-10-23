@@ -196,10 +196,8 @@ function computeRatings(stats: RawTankStat[], wn8Exp: Wn8ExpMap) {
 }
 
 interface RawAccountBrief {
-  nickname: string
   global_rating: number
-  last_battle_time: number
-  statistics: { random: { battles: number; wins: number; damage_dealt: number } }
+  statistics: { random: { battles: number; wins: number } }
 }
 
 export async function searchPlayers(region: Region, query: string): Promise<SearchResult[]> {
@@ -211,40 +209,26 @@ export async function searchPlayers(region: Region, query: string): Promise<Sear
   )
   if (!list.length) return []
 
-  const ids = list.map((p) => p.account_id)
-  const [info, wn8Exp, ...tankStats] = await Promise.all([
-    wgFetch<Record<string, RawAccountBrief | null>>(
-      region,
-      "account/info",
-      {
-        account_id: ids.join(","),
-        extra: "statistics.random",
-        fields:
-          "nickname,global_rating,last_battle_time,statistics.random.battles,statistics.random.wins,statistics.random.damage_dealt",
-      },
-      300,
-    ),
-    getWn8Expected(),
-    ...ids.map((id) => getTankStats(region, id).catch(() => null)),
-  ])
+  const info = await wgFetch<Record<string, RawAccountBrief | null>>(
+    region,
+    "account/info",
+    {
+      account_id: list.map((p) => p.account_id).join(","),
+      extra: "statistics.random",
+      fields: "global_rating,statistics.random.battles,statistics.random.wins",
+    },
+    300,
+  ).catch(() => ({}) as Record<string, RawAccountBrief | null>)
 
-  return list.map((p, i) => {
+  return list.map((p) => {
     const acc = info[String(p.account_id)]
-    const stats = tankStats[i] as RawTankStat[] | null
-    const ratings = stats ? computeRatings(stats, wn8Exp) : null
     const battles = acc?.statistics.random.battles ?? 0
     return {
       accountId: p.account_id,
       nickname: p.nickname,
       battles,
       winRate: battles ? (acc!.statistics.random.wins / battles) * 100 : null,
-      avgDamage: battles ? acc!.statistics.random.damage_dealt / battles : null,
-      lastBattleAt: acc?.last_battle_time ?? null,
-      ratings: {
-        wn8: ratings?.wn8 ?? null,
-        wnx: ratings?.wnx ?? null,
-        wg: acc?.global_rating ?? null,
-      },
+      wgRating: acc?.global_rating ?? null,
     }
   })
 }
