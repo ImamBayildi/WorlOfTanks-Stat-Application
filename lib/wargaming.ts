@@ -1,5 +1,6 @@
 import { cache } from "react"
 import wnxExpectedRaw from "@/lib/data/wnx-expected.json"
+import type { CompactTank } from "@/lib/db/schema"
 import { calcWn8, calcWnx, type Totals } from "@/lib/ratings"
 import type { PlayerData, Region, SearchResult, TankRow, TankType } from "@/lib/types"
 
@@ -141,7 +142,24 @@ function addTotals(target: Totals, source: Totals) {
   target.assist += source.assist
 }
 
-function computeRatings(stats: RawTankStat[], wn8Exp: Wn8ExpMap) {
+export function toCompact(stats: RawTankStat[]): CompactTank[] {
+  return stats
+    .filter((s) => s.random.battles > 0)
+    .map((s) => {
+      const t = toTotals(s.random)
+      return [s.tank_id, t.battles, t.wins, t.damage, t.frags, t.spots, t.def, t.assist]
+    })
+}
+
+export function compactToTotals(c: CompactTank): Totals {
+  return { battles: c[1], wins: c[2], damage: c[3], frags: c[4], spots: c[5], def: c[6], assist: c[7] }
+}
+
+export async function computeRatingsFromTotals(entries: { tankId: number; totals: Totals }[]) {
+  return computeRatings(entries, await getWn8Expected())
+}
+
+function computeRatings(entries: { tankId: number; totals: Totals }[], wn8Exp: Wn8ExpMap) {
   const wn8Actual = emptyTotals()
   const wn8Expected = { wins: 0, damage: 0, frags: 0, spots: 0, def: 0 }
   const wnxActual = emptyTotals()
@@ -149,8 +167,8 @@ function computeRatings(stats: RawTankStat[], wn8Exp: Wn8ExpMap) {
 
   const perTank = new Map<number, { wn8: number | null; wnx: number | null }>()
 
-  for (const s of stats) {
-    const totals = toTotals(s.random)
+  for (const { tankId, totals } of entries) {
+    const s = { tank_id: tankId }
     const n = totals.battles
     if (!n) continue
     let tankWn8: number | null = null
@@ -261,7 +279,12 @@ interface RawAccountFull {
   }
 }
 
-export const getPlayer = cache(async (region: Region, accountId: number): Promise<PlayerData | null> => {
+export interface PlayerBundle {
+  player: PlayerData
+  compact: CompactTank[] | null
+}
+
+export const getPlayerBundle = cache(async (region: Region, accountId: number): Promise<PlayerBundle | null> => {
   const [info, stats, vehicles, wn8Exp, clan] = await Promise.all([
     wgFetch<Record<string, RawAccountFull | null>>(
       region,
@@ -290,7 +313,12 @@ export const getPlayer = cache(async (region: Region, accountId: number): Promis
 
   const r = acc.statistics.random
   const b = r.battles || 0
-  const ratings = stats ? computeRatings(stats, wn8Exp) : null
+  const ratings = stats
+    ? computeRatings(
+        stats.map((s) => ({ tankId: s.tank_id, totals: toTotals(s.random) })),
+        wn8Exp,
+      )
+    : null
 
   const tanks: TankRow[] = (stats ?? [])
     .filter((s) => s.random.battles > 0)
@@ -319,7 +347,7 @@ export const getPlayer = cache(async (region: Region, accountId: number): Promis
 
   const clanInfo = clan?.[String(accountId)]?.clan ?? null
 
-  return {
+  const player: PlayerData = {
     accountId,
     region,
     nickname: acc.nickname,
@@ -351,5 +379,8 @@ export const getPlayer = cache(async (region: Region, accountId: number): Promis
       maxXp: acc.statistics.all.max_xp ?? 0,
     },
     tanks,
+    periods: null,
   }
+
+  return { player, compact: stats ? toCompact(stats) : null }
 })

@@ -1,18 +1,12 @@
-import { RatingValue } from "@/components/rating-value"
+import { StatTile } from "@/components/stat-tile"
 import { formatDecimal, formatInt, formatPercent } from "@/lib/format"
+import { getRatingColor } from "@/lib/ratings"
 import type { PlayerSummary } from "@/lib/types"
 
 export function StatsGrid({ summary: s }: { summary: PlayerSummary }) {
-  const items: { label: string; value: React.ReactNode }[] = [
+  const items: { label: string; value: string; color?: string }[] = [
     { label: "Savaş", value: formatInt(s.battles) },
-    {
-      label: "Galibiyet",
-      value: (
-        <RatingValue scale="winRate" value={s.winRate}>
-          {formatPercent(s.winRate)}
-        </RatingValue>
-      ),
-    },
+    { label: "Galibiyet", value: formatPercent(s.winRate), color: getRatingColor("winRate", s.battles ? s.winRate : null) },
     { label: "Ort. Hasar", value: formatInt(s.avgDamage) },
     { label: "Ort. Asist", value: formatInt(s.avgAssist) },
     { label: "Ort. Tecrübe", value: formatInt(s.avgXp) },
@@ -26,21 +20,18 @@ export function StatsGrid({ summary: s }: { summary: PlayerSummary }) {
   ]
 
   return (
-    <section aria-labelledby="genel-istatistik" className="rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3">
+    <section aria-labelledby="genel-istatistik" className="rounded-xl border border-border bg-card p-5">
+      <div className="mb-4 flex items-center justify-between">
         <h2 id="genel-istatistik" className="text-sm font-medium">
-          Rastgele savaşlar
+          Genel · Rastgele savaşlar
         </h2>
         <p className="text-xs text-muted-foreground">
           {`${formatInt(s.wins)} G · ${formatInt(s.losses)} M · ${formatInt(s.draws)} B`}
         </p>
       </div>
-      <dl className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+      <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
         {items.map((item) => (
-          <div key={item.label} className="border-border px-5 py-4 [&:not(:last-child)]:border-b lg:[&:nth-last-child(-n+6)]:border-b-0">
-            <dt className="text-xs text-muted-foreground">{item.label}</dt>
-            <dd className="mt-1 font-mono text-lg font-semibold tabular-nums">{item.value}</dd>
-          </div>
+          <StatTile key={item.label} label={item.label} value={item.value} color={item.color} />
         ))}
       </dl>
     </section>

@@ -5,6 +5,7 @@ import { RatingToggle } from "@/components/rating-toggle"
 import { PlayerHeader } from "@/components/player/player-header"
 import { RatingCards } from "@/components/player/rating-cards"
 import { StatsGrid } from "@/components/player/stats-grid"
+import { PeriodStats } from "@/components/player/period-stats"
 import { TierBreakdown } from "@/components/player/tier-breakdown"
 import { TankTable } from "@/components/player/tank-table"
 import type { RatingKey } from "@/lib/ratings"
@@ -34,6 +35,8 @@ export function PlayerView({ player, initialRating }: { player: PlayerData; init
           Bu oyuncunun tank istatistikleri gizli. WN8 ve WNX hesaplanamıyor.
         </p>
       )}
+
+      {player.periods && <PeriodStats periods={player.periods} />}
 
       <StatsGrid summary={player.summary} />
 

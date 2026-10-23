@@ -1,4 +1,5 @@
 import { RatingValue } from "@/components/rating-value"
+import { tintStyle } from "@/components/stat-tile"
 import { getScaleStep, RATING_KEYS, RATING_LABELS, SCALES, type RatingKey } from "@/lib/ratings"
 import type { Ratings } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -27,9 +28,11 @@ export function RatingCards({
             onClick={() => onSelect(key)}
             aria-pressed={active}
             className={cn(
-              "relative flex flex-col overflow-hidden rounded-xl border bg-card p-5 text-left transition-colors",
-              active ? "border-primary/60" : "border-border hover:border-foreground/20",
+              "relative flex flex-col overflow-hidden rounded-xl border bg-card p-5 text-left transition-[box-shadow,transform] hover:-translate-y-0.5",
+              step ? "" : "border-border",
+              active && "ring-2 ring-primary/70 ring-offset-2 ring-offset-background",
             )}
+            style={tintStyle(step?.color, active ? 20 : 12)}
           >
             <span
               className="absolute inset-x-0 top-0 h-0.5"
