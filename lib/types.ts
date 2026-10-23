@@ -11,9 +11,7 @@ export interface SearchResult {
   nickname: string
   battles: number
   winRate: number | null
-  avgDamage: number | null
-  lastBattleAt: number | null
-  ratings: Ratings
+  wgRating: number | null
 }
 
 export interface TankRow {
@@ -64,4 +62,38 @@ export interface PlayerData {
   ratings: Ratings
   summary: PlayerSummary
   tanks: TankRow[]
+  periods: PeriodStats[] | null
+}
+
+export type PeriodKey = "day" | "week" | "month"
+
+export interface PeriodStats {
+  key: PeriodKey
+  /** Unix seconds of the baseline snapshot; null while data is still being collected. */
+  since: number | null
+  /** True when the baseline is younger than the full period (tracking started recently). */
+  partial: boolean
+  battles: number
+  winRate: number | null
+  avgDamage: number | null
+  avgFrags: number | null
+  avgAssist: number | null
+  wn8: number | null
+  wnx: number | null
+}
+
+export type LeaderboardPeriod = "all" | "month" | "week"
+export type LeaderboardSort = "wn8" | "wnx" | "wg" | "winRate"
+
+export interface LeaderboardRow {
+  region: Region
+  accountId: number
+  nickname: string
+  clanTag: string | null
+  battles: number
+  winRate: number | null
+  avgDamage: number | null
+  wn8: number | null
+  wnx: number | null
+  wg: number | null
 }

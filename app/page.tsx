@@ -1,4 +1,4 @@
-import { SearchForm } from "@/components/search-form"
+import { PlayerSearch } from "@/components/player-search"
 import { RatingLegend } from "@/components/rating-legend"
 
 export default function HomePage() {
@@ -15,8 +15,11 @@ export default function HomePage() {
           Oyuncu nicki ile arayın; WN8, WNX veya WoT Kişisel Reytingi ile oyuncuları ve tankları dilediğiniz
           ölçüte göre listeleyin.
         </p>
-        <div className="mt-10 w-full max-w-2xl">
-          <SearchForm />
+        <div className="mt-10 w-full max-w-2xl text-left">
+          <PlayerSearch size="lg" />
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            {"Nick'in başını yazın, listeden oyuncuyu seçin."}
+          </p>
         </div>
       </section>
       <RatingLegend />

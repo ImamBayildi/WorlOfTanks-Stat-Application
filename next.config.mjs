@@ -6,6 +6,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  async redirects() {
+    return [{ source: "/search", destination: "/", permanent: false }]
+  },
   async headers() {
     return [
       {
