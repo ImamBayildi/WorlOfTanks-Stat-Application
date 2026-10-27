@@ -1,14 +1,8 @@
 import Link from "next/link"
 import { PERIOD_OPTIONS, SORT_OPTIONS } from "@/lib/leaderboard"
+import { getI18n } from "@/lib/i18n/server"
 import type { LeaderboardPeriod, LeaderboardSort, Region } from "@/lib/types"
 import { cn } from "@/lib/utils"
-
-const REGION_OPTIONS: { value: Region | null; label: string }[] = [
-  { value: null, label: "Tümü" },
-  { value: "eu", label: "EU" },
-  { value: "com", label: "NA" },
-  { value: "asia", label: "ASIA" },
-]
 
 type State = { period: LeaderboardPeriod; sort: LeaderboardSort; region: Region | null }
 
@@ -55,19 +49,30 @@ function Segment<T>({
   )
 }
 
-export function LeaderboardFilters(state: State) {
-  const sorts = SORT_OPTIONS.filter((s) => !s.allOnly || state.period === "all")
+export async function LeaderboardFilters(state: State) {
+  const { t } = await getI18n()
+  const periods = PERIOD_OPTIONS.map((p) => ({ value: p.value, label: t.leaderboard.periods[p.value] }))
+  const sorts = SORT_OPTIONS.filter((s) => !s.allOnly || state.period === "all").map((s) => ({
+    value: s.value,
+    label: s.value === "winRate" ? t.common.winRate : s.value === "wg" ? t.ratings.wg : s.label,
+  }))
+  const regions: { value: Region | null; label: string }[] = [
+    { value: null, label: t.common.all },
+    { value: "eu", label: "EU" },
+    { value: "com", label: "NA" },
+    { value: "asia", label: "ASIA" },
+  ]
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
       <Segment
-        label="Dönem"
-        options={PERIOD_OPTIONS}
+        label={t.leaderboard.period}
+        options={periods}
         value={state.period}
         toHref={(period) => href({ ...state, period, sort: period === "all" ? state.sort : state.sort === "wg" ? "wn8" : state.sort })}
       />
       <div className="flex flex-wrap gap-3">
-        <Segment label="Sıralama ölçütü" options={sorts} value={state.sort} toHref={(sort) => href({ ...state, sort })} />
-        <Segment label="Sunucu" options={REGION_OPTIONS} value={state.region} toHref={(region) => href({ ...state, region })} />
+        <Segment label={t.leaderboard.sort} options={sorts} value={state.sort} toHref={(sort) => href({ ...state, sort })} />
+        <Segment label={t.common.region} options={regions} value={state.region} toHref={(region) => href({ ...state, region })} />
       </div>
     </div>
   )

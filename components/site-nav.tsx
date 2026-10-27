@@ -3,34 +3,35 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Heart } from "lucide-react"
+import { useI18n } from "@/components/i18n-provider"
 import { cn } from "@/lib/utils"
-
-const LINKS = [
-  { href: "/", label: "Oyuncu Ara", match: (p: string) => p === "/" || p.startsWith("/player") },
-  { href: "/reytingler", label: "Oyuncu Reytingleri", match: (p: string) => p.startsWith("/reytingler") },
-]
 
 export function SiteNav({ className }: { className?: string }) {
   const pathname = usePathname()
+  const { t } = useI18n()
   const donateActive = pathname.startsWith("/donate")
+
+  const links = [
+    { href: "/", label: t.nav.search, active: pathname === "/" || pathname.startsWith("/player") },
+    { href: "/reytingler", label: t.nav.ratings, active: pathname.startsWith("/reytingler") },
+    { href: "/spotmeter", label: t.nav.spotmeter, active: pathname.startsWith("/spotmeter") },
+  ]
+
   return (
-    <nav aria-label="Ana menü" className={cn("flex items-center gap-1 text-sm", className)}>
-      {LINKS.map((l) => {
-        const active = l.match(pathname)
-        return (
-          <Link
-            key={l.href}
-            href={l.href}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "whitespace-nowrap rounded-md px-2.5 py-1.5 transition-colors",
-              active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {l.label}
-          </Link>
-        )
-      })}
+    <nav aria-label={t.nav.menu} className={cn("flex items-center gap-1 text-sm", className)}>
+      {links.map((l) => (
+        <Link
+          key={l.href}
+          href={l.href}
+          aria-current={l.active ? "page" : undefined}
+          className={cn(
+            "whitespace-nowrap rounded-md px-2.5 py-1.5 transition-colors",
+            l.active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {l.label}
+        </Link>
+      ))}
       <Link
         href="/donate"
         aria-current={donateActive ? "page" : undefined}
@@ -42,7 +43,7 @@ export function SiteNav({ className }: { className?: string }) {
         )}
       >
         <Heart className="size-3.5" aria-hidden="true" />
-        Donate
+        {t.nav.donate}
       </Link>
     </nav>
   )

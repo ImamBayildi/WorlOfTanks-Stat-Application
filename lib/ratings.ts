@@ -89,6 +89,7 @@ export interface ScaleStep {
   max: number
   color: string
   label: string
+  level: number
 }
 
 const SKILL_COLORS = [
@@ -118,7 +119,7 @@ const SKILL_LABELS = [
 ]
 
 function buildScale(thresholds: number[]): ScaleStep[] {
-  return thresholds.map((max, i) => ({ max, color: SKILL_COLORS[i], label: SKILL_LABELS[i] }))
+  return thresholds.map((max, i) => ({ max, color: SKILL_COLORS[i], label: SKILL_LABELS[i], level: i }))
 }
 
 export const SCALES: Record<RatingKey | "winRate", ScaleStep[]> = {

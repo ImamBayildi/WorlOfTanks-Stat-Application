@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { useI18n } from "@/components/i18n-provider"
 
 let stripePromise: ReturnType<typeof loadStripe> | null = null
 function getStripe(publishableKey: string) {
@@ -18,6 +19,7 @@ function getStripe(publishableKey: string) {
 }
 
 export function DonateForm({ publishableKey }: { publishableKey: string }) {
+  const { t } = useI18n()
   const [selected, setSelected] = useState<number | null>(10)
   const [custom, setCustom] = useState("")
   const [checkoutAmount, setCheckoutAmount] = useState<number | null>(null)
@@ -44,7 +46,7 @@ export function DonateForm({ publishableKey }: { publishableKey: string }) {
       }}
     >
       <fieldset className="flex flex-col gap-3">
-        <legend className="mb-3 text-sm font-medium">Bağış tutarı seçin</legend>
+        <legend className="mb-3 text-sm font-medium">{t.donate.pickAmount}</legend>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {DONATION_PRESETS.map((v) => {
             const active = custom === "" && selected === v
@@ -72,7 +74,7 @@ export function DonateForm({ publishableKey }: { publishableKey: string }) {
       </fieldset>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="custom-amount">Ya da farklı bir tutar girin (USD)</Label>
+        <Label htmlFor="custom-amount">{t.donate.customLabel}</Label>
         <div className="relative">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
           <Input
@@ -82,7 +84,7 @@ export function DonateForm({ publishableKey }: { publishableKey: string }) {
             min={DONATION_MIN}
             max={DONATION_MAX}
             step={1}
-            placeholder="örn. 15"
+            placeholder={t.donate.customPlaceholder}
             value={custom}
             onChange={(e) => setCustom(e.target.value)}
             className="pl-7 font-mono tabular-nums"
@@ -91,16 +93,16 @@ export function DonateForm({ publishableKey }: { publishableKey: string }) {
           />
         </div>
         <p id="custom-amount-hint" className={cn("text-xs", custom !== "" && !valid ? "text-destructive" : "text-muted-foreground")}>
-          {`${DONATION_MIN} - ${DONATION_MAX} USD arasında tam sayı.`}
+          {t.donate.range(DONATION_MIN, DONATION_MAX)}
         </p>
       </div>
 
       <Button type="submit" size="lg" disabled={!valid} className="gap-2">
         <Heart className="size-4" aria-hidden="true" />
-        {valid ? `$${amount} bağış yap` : "Tutar seçin"}
+        {valid ? t.donate.submit(amount) : t.donate.chooseAmount}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
-        Ödemeler Stripe ile güvenle işlenir. Kart bilgileriniz bize ulaşmaz.
+        {t.donate.secure}
       </p>
     </form>
   )
@@ -115,6 +117,7 @@ function DonationCheckout({
   publishableKey: string
   onBack: () => void
 }) {
+  const { t } = useI18n()
   const idempotencyKey = useMemo(() => crypto.randomUUID(), [])
   const fetchClientSecret = useCallback(
     () => startDonationSession(amount, idempotencyKey),
@@ -126,7 +129,7 @@ function DonationCheckout({
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 px-2">
           <ArrowLeft className="size-4" aria-hidden="true" />
-          Tutarı değiştir
+          {t.donate.changeAmount}
         </Button>
         <span className="font-mono text-sm tabular-nums text-muted-foreground">{`$${amount} USD`}</span>
       </div>
