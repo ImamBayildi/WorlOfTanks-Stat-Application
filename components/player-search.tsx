@@ -117,7 +117,7 @@ export function PlayerSearch({ size = "sm", className }: { size?: "sm" | "lg"; c
           }}
         >
           <SelectTrigger
-            aria-label="Sunucu"
+            aria-label={t.common.region}
             className={cn("shrink-0 border-0 bg-secondary", isLarge ? "h-11 w-24" : "h-8 w-20 text-xs")}
           >
             <SelectValue />
@@ -136,7 +136,7 @@ export function PlayerSearch({ size = "sm", className }: { size?: "sm" | "lg"; c
             aria-hidden="true"
           />
           <label htmlFor={inputId} className="sr-only">
-            Oyuncu nicki
+            {t.search.label}
           </label>
           <Input
             id={inputId}
