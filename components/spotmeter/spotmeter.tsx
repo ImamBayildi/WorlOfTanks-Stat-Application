@@ -162,7 +162,9 @@ export function Spotmeter() {
               <TankPicker tanks={tanks} value={observer.slug} onSelect={(slug) => updateSlot(observer.id, { slug })} />
             </div>
             <SlotActions
-              slot={observer}
+                  slot={observer}
+                  active={editing === observer.id}
+
               onEdit={() => setEditing((cur) => (cur === observer.id ? null : observer.id))}
               onBush={() => toggleBush(observer)}
               onMoving={() => toggleMoving(observer)}
@@ -205,6 +207,7 @@ export function Spotmeter() {
                       </div>
                       <SlotActions
                         slot={slot}
+                    active={editing === slot.id}
                         onEdit={() => setEditing((cur) => (cur === slot.id ? null : slot.id))}
                         onBush={() => toggleBush(slot)}
                         onMoving={() => toggleMoving(slot)}
@@ -266,11 +269,13 @@ export function Spotmeter() {
 
 function SlotActions({
   slot,
+  active,
   onEdit,
   onBush,
   onMoving,
 }: {
   slot: Slot
+  active: boolean
   onEdit: () => void
   onBush: () => void
   onMoving: () => void
@@ -313,7 +318,13 @@ function SlotActions({
       <button
         type="button"
         onClick={onEdit}
-        className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        aria-pressed={active}
+        className={cn(
+          "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+          active
+            ? "border-primary bg-primary text-primary-foreground shadow-[0_0_12px_-2px] shadow-primary/60 hover:bg-primary/90"
+            : "border-border hover:bg-muted",
+        )}
       >
         <SlidersHorizontal className="size-4" aria-hidden="true" />
         <span className="hidden sm:inline">{t.spot.configure}</span>
