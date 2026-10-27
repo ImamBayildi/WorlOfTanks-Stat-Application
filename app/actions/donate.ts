@@ -19,8 +19,8 @@ export async function startDonationSession(amountUsd: number, idempotencyKey?: s
           price_data: {
             currency: "usd",
             product_data: {
-              name: "TankStat Bağışı",
-              description: "TankStat uygulamasının geliştirilmesine destek",
+              name: "Wotrate Donation",
+              description: "Support the development of Wotrate",
             },
             unit_amount: amountUsd * 100,
           },

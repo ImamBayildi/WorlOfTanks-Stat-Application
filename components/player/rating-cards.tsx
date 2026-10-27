@@ -1,4 +1,7 @@
+"use client"
+
 import { RatingValue } from "@/components/rating-value"
+import { useI18n } from "@/components/i18n-provider"
 import { tintStyle } from "@/components/stat-tile"
 import { getScaleStep, RATING_KEYS, RATING_LABELS, SCALES, type RatingKey } from "@/lib/ratings"
 import type { Ratings } from "@/lib/types"
@@ -13,6 +16,7 @@ export function RatingCards({
   selected: RatingKey
   onSelect: (key: RatingKey) => void
 }) {
+  const { t } = useI18n()
   return (
     <div className="grid gap-4 md:grid-cols-3">
       {RATING_KEYS.map((key) => {
@@ -41,11 +45,11 @@ export function RatingCards({
             />
             <span className="flex items-center justify-between text-sm text-muted-foreground">
               {RATING_LABELS[key]}
-              {active && <span className="text-xs text-primary">Seçili</span>}
+              {active && <span className="text-xs text-primary">{t.common.selected}</span>}
             </span>
             <RatingValue scale={key} value={value} className="mt-2 text-4xl" />
             <span className="mt-1 text-sm" style={{ color: step?.color }}>
-              {step?.label ?? "Veri yok"}
+              {step ? (t.ratings.skill[step.level] ?? step.label) : t.common.noData}
             </span>
             <span className="mt-4 flex gap-1" aria-hidden="true">
               {scale.map((s, i) => (

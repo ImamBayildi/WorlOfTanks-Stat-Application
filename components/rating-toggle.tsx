@@ -3,6 +3,7 @@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { RATING_KEYS, RATING_LABELS, type RatingKey } from "@/lib/ratings"
 import { cn } from "@/lib/utils"
+import { useI18n } from "@/components/i18n-provider"
 
 export function RatingToggle({
   value,
@@ -13,9 +14,10 @@ export function RatingToggle({
   onChange: (value: RatingKey) => void
   className?: string
 }) {
+  const { t } = useI18n()
   return (
     <ToggleGroup
-      aria-label="Reyting türü"
+      aria-label={t.ratings.type}
       value={[value]}
       onValueChange={(next) => {
         const selected = next[0] as RatingKey | undefined
@@ -30,7 +32,7 @@ export function RatingToggle({
           value={key}
           className="h-8 rounded-md px-3 text-xs font-medium text-muted-foreground data-[pressed]:bg-primary data-[pressed]:text-primary-foreground sm:text-sm"
         >
-          {RATING_LABELS[key]}
+          {key === "wg" ? t.ratings.wg : RATING_LABELS[key]}
         </ToggleGroupItem>
       ))}
     </ToggleGroup>

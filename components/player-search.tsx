@@ -7,7 +7,7 @@ import { ChevronRight, Loader2, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RatingValue } from "@/components/rating-value"
-import { formatInt, formatPercent } from "@/lib/format"
+import { useI18n } from "@/components/i18n-provider"
 import type { Region, SearchResult } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -22,7 +22,7 @@ type SearchResponse = { results?: SearchResult[]; error?: string }
 const fetcher = async (url: string): Promise<SearchResponse> => {
   const res = await fetch(url)
   const json = (await res.json()) as SearchResponse
-  if (!res.ok) throw new Error(json.error ?? "Arama sırasında bir hata oluştu.")
+  if (!res.ok) throw new Error(json.error ?? "")
   return json
 }
 
@@ -37,6 +37,7 @@ function useDebounced<T>(value: T, delay: number) {
 
 export function PlayerSearch({ size = "sm", className }: { size?: "sm" | "lg"; className?: string }) {
   const router = useRouter()
+  const { t, f } = useI18n()
   const listboxId = useId()
   const inputId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
@@ -92,10 +93,10 @@ export function PlayerSearch({ size = "sm", className }: { size?: "sm" | "lg"; c
   }
 
   let status: string | null = null
-  if (trimmed.length < 3) status = "En az 3 karakter girin."
-  else if (error) status = error.message
-  else if (!pending && !results.length && data) status = `"${debounced}" ile başlayan oyuncu bulunamadı.`
-  else if (pending && !results.length) status = "Aranıyor…"
+  if (trimmed.length < 3) status = t.search.minChars
+  else if (error) status = error.message || t.search.error
+  else if (!pending && !results.length && data) status = t.search.notFound(debounced)
+  else if (pending && !results.length) status = t.search.searching
 
   return (
     <div ref={rootRef} className={cn("relative w-full", className)}>
@@ -116,7 +117,7 @@ export function PlayerSearch({ size = "sm", className }: { size?: "sm" | "lg"; c
           }}
         >
           <SelectTrigger
-            aria-label="Sunucu"
+            aria-label={t.common.region}
             className={cn("shrink-0 border-0 bg-secondary", isLarge ? "h-11 w-24" : "h-8 w-20 text-xs")}
           >
             <SelectValue />
@@ -135,7 +136,7 @@ export function PlayerSearch({ size = "sm", className }: { size?: "sm" | "lg"; c
             aria-hidden="true"
           />
           <label htmlFor={inputId} className="sr-only">
-            Oyuncu nicki
+            {t.search.label}
           </label>
           <Input
             id={inputId}
@@ -152,7 +153,7 @@ export function PlayerSearch({ size = "sm", className }: { size?: "sm" | "lg"; c
             }}
             onFocus={() => setOpen(true)}
             onKeyDown={onKeyDown}
-            placeholder="Oyuncu nicki ara…"
+            placeholder={t.search.placeholder}
             autoComplete="off"
             spellCheck={false}
             maxLength={24}
@@ -177,7 +178,7 @@ export function PlayerSearch({ size = "sm", className }: { size?: "sm" | "lg"; c
               {status}
             </p>
           )}
-          <ul id={listboxId} role="listbox" aria-label="Oyuncu sonuçları" className={cn("max-h-96 overflow-y-auto p-1", !results.length && "hidden")}>
+          <ul id={listboxId} role="listbox" aria-label={t.search.results} className={cn("max-h-96 overflow-y-auto p-1", !results.length && "hidden")}>
             {results.map((p, i) => (
               <li
                 key={p.accountId}
@@ -195,19 +196,19 @@ export function PlayerSearch({ size = "sm", className }: { size?: "sm" | "lg"; c
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{p.nickname}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatInt(p.battles)} savaş
+                    {`${f.int(p.battles)} ${t.player.stats.battles.toLocaleLowerCase()}`}
                     {p.winRate != null && (
                       <>
                         {" · "}
                         <RatingValue scale="winRate" value={p.winRate} className="font-medium">
-                          {formatPercent(p.winRate)}
+                          {f.pct(p.winRate)}
                         </RatingValue>
                       </>
                     )}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] tracking-wide text-muted-foreground uppercase">WoT Reyting</p>
+                  <p className="text-[10px] tracking-wide text-muted-foreground uppercase">{t.search.wgShort}</p>
                   <RatingValue scale="wg" value={p.wgRating} className="text-sm" />
                 </div>
                 <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />

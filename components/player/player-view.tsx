@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { RatingToggle } from "@/components/rating-toggle"
+import { useI18n } from "@/components/i18n-provider"
 import { PlayerHeader } from "@/components/player/player-header"
 import { RatingCards } from "@/components/player/rating-cards"
 import { StatsGrid } from "@/components/player/stats-grid"
@@ -12,6 +13,7 @@ import type { RatingKey } from "@/lib/ratings"
 import type { PlayerData } from "@/lib/types"
 
 export function PlayerView({ player, initialRating }: { player: PlayerData; initialRating: RatingKey }) {
+  const { t } = useI18n()
   const [rating, setRating] = useState(initialRating)
 
   const changeRating = (next: RatingKey) => {
@@ -32,7 +34,7 @@ export function PlayerView({ player, initialRating }: { player: PlayerData; init
 
       {player.hidden && (
         <p className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
-          Bu oyuncunun tank istatistikleri gizli. WN8 ve WNX hesaplanamıyor.
+          {t.player.hidden}
         </p>
       )}
 

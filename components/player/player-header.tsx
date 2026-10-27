@@ -1,10 +1,13 @@
+"use client"
+
 import { CalendarDays, Clock } from "lucide-react"
-import { formatDate } from "@/lib/format"
+import { useI18n } from "@/components/i18n-provider"
 import type { PlayerData } from "@/lib/types"
 
 const REGION_LABELS = { eu: "EU", com: "NA", asia: "ASIA" } as const
 
 export function PlayerHeader({ player }: { player: PlayerData }) {
+  const { t, f } = useI18n()
   return (
     <div className="min-w-0">
       <div className="flex flex-wrap items-center gap-2">
@@ -25,11 +28,11 @@ export function PlayerHeader({ player }: { player: PlayerData }) {
       <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <CalendarDays className="size-3.5" aria-hidden="true" />
-          Kayıt: {formatDate(player.createdAt)}
+          {`${t.player.registered}: ${f.date(player.createdAt)}`}
         </span>
         <span className="flex items-center gap-1.5">
           <Clock className="size-3.5" aria-hidden="true" />
-          Son savaş: {formatDate(player.lastBattleAt)}
+          {`${t.player.lastBattle}: ${f.date(player.lastBattleAt)}`}
         </span>
       </div>
     </div>

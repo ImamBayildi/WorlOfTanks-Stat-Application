@@ -1,10 +1,12 @@
 import { useMemo } from "react"
 import { RatingValue } from "@/components/rating-value"
+import { useI18n } from "@/components/i18n-provider"
 import { formatInt, formatPercent, toRoman } from "@/lib/format"
 import { getRatingColor, RATING_LABELS, type RatingKey } from "@/lib/ratings"
 import type { TankRow } from "@/lib/types"
 
 export function TierBreakdown({ tanks, rating }: { tanks: TankRow[]; rating: RatingKey }) {
+  const i18n = useI18n()
   const metric: "wn8" | "wnx" = rating === "wnx" ? "wnx" : "wn8"
 
   const tiers = useMemo(() => {
@@ -35,11 +37,11 @@ export function TierBreakdown({ tanks, rating }: { tanks: TankRow[]; rating: Rat
     <section aria-labelledby="seviye-dagilimi" className="rounded-xl border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         <h2 id="seviye-dagilimi" className="text-sm font-medium">
-          Seviye dağılımı
+          {i18n.t.player.tiers.title}
         </h2>
         <p className="text-xs text-muted-foreground">
-          Çubuk rengi: savaş ağırlıklı ort. {RATING_LABELS[metric]}
-          {rating === "wg" && " (WoT Reytingi tank bazlı yayınlanmaz)"}
+          {i18n.t.player.tiers.note(RATING_LABELS[metric])}
+          {rating === "wg" && i18n.t.player.tiers.wgNote}
         </p>
       </div>
       <ul className="mt-4 flex flex-col gap-2">

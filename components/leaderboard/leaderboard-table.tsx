@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Trophy } from "lucide-react"
 import { tintStyle } from "@/components/stat-tile"
-import { formatInt, formatPercent } from "@/lib/format"
+import { getI18n } from "@/lib/i18n/server"
 import { getRatingColor, type SCALES } from "@/lib/ratings"
 import type { LeaderboardRow, LeaderboardSort } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -25,15 +25,14 @@ function Pill({ scale, value, text, active }: { scale: keyof typeof SCALES; valu
   )
 }
 
-export function LeaderboardTable({ rows, sort, caption }: { rows: LeaderboardRow[]; sort: LeaderboardSort; caption: string }) {
+export async function LeaderboardTable({ rows, sort, caption }: { rows: LeaderboardRow[]; sort: LeaderboardSort; caption: string }) {
+  const { t, f } = await getI18n()
   if (!rows.length) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
         <Trophy className="size-6 text-muted-foreground" aria-hidden="true" />
-        <p className="font-medium">Bu filtre için henüz yeterli veri yok</p>
-        <p className="max-w-md text-sm text-muted-foreground">
-          Dönemlik sıralamalar, oyuncular takip edildikçe dolar. Oyuncu arayarak listeye katkıda bulunabilirsiniz.
-        </p>
+        <p className="font-medium">{t.leaderboard.emptyTitle}</p>
+        <p className="max-w-md text-sm text-muted-foreground">{t.leaderboard.emptyText}</p>
       </div>
     )
   }
@@ -46,13 +45,13 @@ export function LeaderboardTable({ rows, sort, caption }: { rows: LeaderboardRow
           <thead>
             <tr className="border-b border-border text-xs text-muted-foreground">
               <th scope="col" className="w-14 px-5 py-3 text-left font-medium">#</th>
-              <th scope="col" className="px-3 py-3 text-left font-medium">Oyuncu</th>
-              <th scope="col" className="px-3 py-3 text-right font-medium">Savaş</th>
-              <th scope="col" className="px-3 py-3 text-center font-medium">Galibiyet</th>
-              <th scope="col" className="hidden px-3 py-3 text-right font-medium md:table-cell">Ort. Hasar</th>
+              <th scope="col" className="px-3 py-3 text-left font-medium">{t.common.player}</th>
+              <th scope="col" className="px-3 py-3 text-right font-medium">{t.common.battles}</th>
+              <th scope="col" className="px-3 py-3 text-center font-medium">{t.common.winRate}</th>
+              <th scope="col" className="hidden px-3 py-3 text-right font-medium md:table-cell">{t.common.avgDamage}</th>
               <th scope="col" className="px-3 py-3 text-center font-medium">WN8</th>
               <th scope="col" className="px-3 py-3 text-center font-medium">WNX</th>
-              <th scope="col" className="hidden px-5 py-3 text-center font-medium lg:table-cell">WoT Reytingi</th>
+              <th scope="col" className="hidden px-5 py-3 text-center font-medium lg:table-cell">{t.ratings.wg}</th>
             </tr>
           </thead>
           <tbody>
@@ -75,19 +74,19 @@ export function LeaderboardTable({ rows, sort, caption }: { rows: LeaderboardRow
                     </span>
                   </Link>
                 </td>
-                <td className="px-3 py-2.5 text-right font-mono tabular-nums text-muted-foreground">{formatInt(r.battles)}</td>
+                <td className="px-3 py-2.5 text-right font-mono tabular-nums text-muted-foreground">{f.int(r.battles)}</td>
                 <td className="px-3 py-2.5 text-center">
-                  <Pill scale="winRate" value={r.winRate} text={formatPercent(r.winRate)} active={sort === "winRate"} />
+                  <Pill scale="winRate" value={r.winRate} text={f.pct(r.winRate)} active={sort === "winRate"} />
                 </td>
-                <td className="hidden px-3 py-2.5 text-right font-mono tabular-nums md:table-cell">{formatInt(r.avgDamage)}</td>
+                <td className="hidden px-3 py-2.5 text-right font-mono tabular-nums md:table-cell">{f.int(r.avgDamage)}</td>
                 <td className="px-3 py-2.5 text-center">
-                  <Pill scale="wn8" value={r.wn8} text={formatInt(r.wn8)} active={sort === "wn8"} />
+                  <Pill scale="wn8" value={r.wn8} text={f.int(r.wn8)} active={sort === "wn8"} />
                 </td>
                 <td className="px-3 py-2.5 text-center">
-                  <Pill scale="wnx" value={r.wnx} text={formatInt(r.wnx)} active={sort === "wnx"} />
+                  <Pill scale="wnx" value={r.wnx} text={f.int(r.wnx)} active={sort === "wnx"} />
                 </td>
                 <td className="hidden px-5 py-2.5 text-center lg:table-cell">
-                  <Pill scale="wg" value={r.wg} text={formatInt(r.wg)} active={sort === "wg"} />
+                  <Pill scale="wg" value={r.wg} text={f.int(r.wg)} active={sort === "wg"} />
                 </td>
               </tr>
             ))}
