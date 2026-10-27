@@ -25,10 +25,10 @@ async function load(params: Props["params"]) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { region, accountId } = await resolve(params)
   const player = (await getPlayerBundle(region, accountId).catch(() => null))?.player
-  if (!player) return { title: "Oyuncu bulunamadı" }
+  if (!player) return { title: "Player not found" }
   return {
-    title: `${player.nickname} istatistikleri`,
-    description: `${player.nickname} — WN8 ${player.ratings.wn8 ?? "—"}, WNX ${player.ratings.wnx ?? "—"}, WoT Reytingi ${player.ratings.wg ?? "—"}`,
+    title: `${player.nickname} — Wotrate`,
+    description: `${player.nickname} — WN8 ${player.ratings.wn8 ?? "—"}, WNX ${player.ratings.wnx ?? "—"}, WG ${player.ratings.wg ?? "—"}`,
   }
 }
 

@@ -11,7 +11,7 @@ export default function Loading() {
       </div>
       <Skeleton className="mt-6 h-48 rounded-xl" />
       <Skeleton className="mt-6 h-96 rounded-xl" />
-      <span className="sr-only">Oyuncu yükleniyor…</span>
+      <span className="sr-only">Loading…</span>
     </main>
   )
 }

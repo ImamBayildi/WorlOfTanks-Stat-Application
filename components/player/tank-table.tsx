@@ -6,38 +6,38 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { RatingValue } from "@/components/rating-value"
-import { formatInt, formatPercent, TANK_TYPE_LABELS, TANK_TYPE_SHORT, toRoman } from "@/lib/format"
+import { useI18n } from "@/components/i18n-provider"
+import { TANK_TYPE_LABELS, TANK_TYPE_SHORT, toRoman } from "@/lib/format"
 import type { RatingKey } from "@/lib/ratings"
 import type { TankRow } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 type SortKey = "name" | "tier" | "battles" | "winRate" | "avgDamage" | "wn8" | "wnx" | "mastery"
 
-const COLUMNS: { key: SortKey; label: string; align?: "right" }[] = [
-  { key: "name", label: "Tank" },
-  { key: "tier", label: "Seviye", align: "right" },
-  { key: "battles", label: "Savaş", align: "right" },
-  { key: "winRate", label: "Galibiyet", align: "right" },
-  { key: "avgDamage", label: "Ort. Hasar", align: "right" },
-  { key: "wn8", label: "WN8", align: "right" },
-  { key: "wnx", label: "WNX", align: "right" },
-  { key: "mastery", label: "Ustalık", align: "right" },
-]
-
-const MASTERY = ["—", "3. Sınıf", "2. Sınıf", "1. Sınıf", "As"]
-
-const TIER_ITEMS = [
-  { value: "all", label: "Tüm seviyeler" },
-  ...Array.from({ length: 11 }, (_, i) => ({ value: String(11 - i), label: `Seviye ${toRoman(11 - i)}` })),
-]
-const TYPE_ITEMS = [
-  { value: "all", label: "Tüm sınıflar" },
-  ...Object.entries(TANK_TYPE_LABELS).map(([value, label]) => ({ value, label })),
-]
-
 const PAGE_SIZE = 50
 
 export function TankTable({ tanks, rating }: { tanks: TankRow[]; rating: RatingKey }) {
+  const { t: dict, f, locale } = useI18n()
+  const tt = dict.player.tanks
+  const COLUMNS: { key: SortKey; label: string; align?: "right" }[] = [
+    { key: "name", label: "Tank" },
+    { key: "tier", label: tt.tier, align: "right" },
+    { key: "battles", label: dict.player.stats.battles, align: "right" },
+    { key: "winRate", label: dict.player.stats.winRate, align: "right" },
+    { key: "avgDamage", label: dict.player.stats.avgDamage, align: "right" },
+    { key: "wn8", label: "WN8", align: "right" },
+    { key: "wnx", label: "WNX", align: "right" },
+    { key: "mastery", label: tt.mastery, align: "right" },
+  ]
+  const TIER_ITEMS = [
+    { value: "all", label: tt.allTiers },
+    ...Array.from({ length: 11 }, (_, i) => ({ value: String(11 - i), label: tt.tierN(toRoman(11 - i)) })),
+  ]
+  const TYPE_ITEMS = [
+    { value: "all", label: tt.allClasses },
+    ...Object.keys(TANK_TYPE_LABELS).map((value) => ({ value, label: dict.tankTypes[value] ?? value })),
+  ]
+
   const defaultSort: SortKey = rating === "wg" ? "battles" : rating
   const [sortOverride, setSortOverride] = useState<{ key: SortKey; desc: boolean } | null>(null)
   const [query, setQuery] = useState("")
@@ -60,10 +60,10 @@ export function TankTable({ tanks, rating }: { tanks: TankRow[]; rating: RatingK
     )
     const dir = sort.desc ? -1 : 1
     return filtered.sort((a, b) => {
-      if (sort.key === "name") return a.name.localeCompare(b.name, "tr") * dir
+      if (sort.key === "name") return a.name.localeCompare(b.name, locale) * dir
       return (((a[sort.key] as number | null) ?? -1) - ((b[sort.key] as number | null) ?? -1)) * dir
     })
-  }, [tanks, query, tier, type, minBattles, sort.key, sort.desc])
+  }, [tanks, query, tier, type, minBattles, sort.key, sort.desc, locale])
 
   const toggleSort = (key: SortKey) => {
     setSortOverride(
@@ -75,7 +75,7 @@ export function TankTable({ tanks, rating }: { tanks: TankRow[]; rating: RatingK
     <section aria-labelledby="tanklar" className="rounded-xl border border-border bg-card">
       <div className="flex flex-col gap-3 border-b border-border p-4 lg:flex-row lg:items-center lg:justify-between">
         <h2 id="tanklar" className="text-sm font-medium">
-          Tanklar <span className="text-muted-foreground">({rows.length})</span>
+          {tt.title} <span className="text-muted-foreground">({rows.length})</span>
         </h2>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
@@ -84,8 +84,8 @@ export function TankTable({ tanks, rating }: { tanks: TankRow[]; rating: RatingK
               aria-hidden="true"
             />
             <Input
-              aria-label="Tank ara"
-              placeholder="Tank ara…"
+              aria-label={tt.searchLabel}
+              placeholder={tt.search}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value)
@@ -94,15 +94,15 @@ export function TankTable({ tanks, rating }: { tanks: TankRow[]; rating: RatingK
               className="h-8 w-44 pl-8 text-sm"
             />
           </div>
-          <FilterSelect label="Seviye" items={TIER_ITEMS} value={tier} onChange={setTier} />
-          <FilterSelect label="Sınıf" items={TYPE_ITEMS} value={type} onChange={setType} />
+          <FilterSelect label={tt.tier} items={TIER_ITEMS} value={tier} onChange={setTier} />
+          <FilterSelect label={tt.class} items={TYPE_ITEMS} value={type} onChange={setType} />
           <FilterSelect
-            label="Minimum savaş"
+            label={tt.minBattles}
             items={[
-              { value: "0", label: "Tüm savaşlar" },
-              { value: "10", label: "10+ savaş" },
-              { value: "50", label: "50+ savaş" },
-              { value: "100", label: "100+ savaş" },
+              { value: "0", label: tt.allBattles },
+              { value: "10", label: tt.nBattles(10) },
+              { value: "50", label: tt.nBattles(50) },
+              { value: "100", label: tt.nBattles(100) },
             ]}
             value={minBattles}
             onChange={setMinBattles}
@@ -160,26 +160,26 @@ export function TankTable({ tanks, rating }: { tanks: TankRow[]; rating: RatingK
                 </div>
               </TableCell>
               <TableCell className="text-right font-mono text-muted-foreground">{toRoman(t.tier)}</TableCell>
-              <TableCell className="text-right font-mono tabular-nums">{formatInt(t.battles)}</TableCell>
+              <TableCell className="text-right font-mono tabular-nums">{f.int(t.battles)}</TableCell>
               <TableCell className="text-right">
                 <RatingValue scale="winRate" value={t.winRate}>
-                  {formatPercent(t.winRate)}
+                  {f.pct(t.winRate)}
                 </RatingValue>
               </TableCell>
-              <TableCell className="text-right font-mono tabular-nums">{formatInt(t.avgDamage)}</TableCell>
+              <TableCell className="text-right font-mono tabular-nums">{f.int(t.avgDamage)}</TableCell>
               <TableCell className={cn("text-right", rating === "wn8" && "bg-primary/5")}>
                 <RatingValue scale="wn8" value={t.wn8} />
               </TableCell>
               <TableCell className={cn("text-right", rating === "wnx" && "bg-primary/5")}>
                 <RatingValue scale="wnx" value={t.wnx} />
               </TableCell>
-              <TableCell className="text-right text-xs text-muted-foreground">{MASTERY[t.mastery] ?? "—"}</TableCell>
+              <TableCell className="text-right text-xs text-muted-foreground">{tt.masteryLevels[t.mastery] ?? "—"}</TableCell>
             </TableRow>
           ))}
           {rows.length === 0 && (
             <TableRow className="hover:bg-transparent">
               <TableCell colSpan={COLUMNS.length} className="py-10 text-center text-muted-foreground">
-                Filtrelere uyan tank yok.
+                {tt.empty}
               </TableCell>
             </TableRow>
           )}
@@ -193,7 +193,7 @@ export function TankTable({ tanks, rating }: { tanks: TankRow[]; rating: RatingK
             onClick={() => setLimit((l) => l + PAGE_SIZE)}
             className="text-sm text-primary underline-offset-4 hover:underline"
           >
-            {`Daha fazla göster (${rows.length - limit} kaldı)`}
+            {tt.more(rows.length - limit)}
           </button>
         </div>
       )}
