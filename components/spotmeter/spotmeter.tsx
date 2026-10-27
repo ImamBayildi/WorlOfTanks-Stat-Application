@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react"
 import useSWR from "swr"
-import { Eye, EyeOff, Leaf, Loader2, SlidersHorizontal, X } from "lucide-react"
+import { Eye, EyeOff, Gauge, Leaf, Loader2, SlidersHorizontal, X } from "lucide-react"
 import { useI18n } from "@/components/i18n-provider"
 import { DEFAULT_LOADOUT, DEFAULT_SITUATION, spotDistance, viewRange, type TankSpec } from "@/lib/spotmeter/calc"
 import type { TankListItem } from "@/lib/spotmeter/data"
@@ -88,6 +88,9 @@ export function Spotmeter() {
       situation: { ...slot.situation, bush: slot.situation.bush === "none" ? "dense" : "none" },
     })
 
+  const toggleMoving = (slot: Slot) =>
+    updateSlot(slot.id, { situation: { ...slot.situation, moving: !slot.situation.moving } })
+
   const editingSlot = editing === observer.id ? observer : targets.find((x) => x.id === editing)
   const nameOf = (slug: string) => specs[slug]?.shortName ?? tanks.find((x) => x.slug === slug)?.name ?? slug
   const error = listError || specError
@@ -158,7 +161,14 @@ export function Spotmeter() {
             <div className="flex-1">
               <TankPicker tanks={tanks} value={observer.slug} onSelect={(slug) => updateSlot(observer.id, { slug })} />
             </div>
-            <SlotActions slot={observer} onEdit={() => setEditing(observer.id)} onBush={() => toggleBush(observer)} />
+            <SlotActions
+                  slot={observer}
+                  active={editing === observer.id}
+
+              onEdit={() => setEditing((cur) => (cur === observer.id ? null : observer.id))}
+              onBush={() => toggleBush(observer)}
+              onMoving={() => toggleMoving(observer)}
+            />
           </div>
         </section>
 
@@ -195,7 +205,13 @@ export function Spotmeter() {
                       <div className="min-w-0 flex-1">
                         <TankPicker tanks={tanks} value={slot.slug} onSelect={(slug) => updateSlot(slot.id, { slug })} />
                       </div>
-                      <SlotActions slot={slot} onEdit={() => setEditing(slot.id)} onBush={() => toggleBush(slot)} />
+                      <SlotActions
+                        slot={slot}
+                    active={editing === slot.id}
+                        onEdit={() => setEditing((cur) => (cur === slot.id ? null : slot.id))}
+                        onBush={() => toggleBush(slot)}
+                        onMoving={() => toggleMoving(slot)}
+                      />
                       <button
                         type="button"
                         onClick={() => setTargets((ts) => ts.filter((x) => x.id !== slot.id))}
@@ -251,11 +267,39 @@ export function Spotmeter() {
   )
 }
 
-function SlotActions({ slot, onEdit, onBush }: { slot: Slot; onEdit: () => void; onBush: () => void }) {
+function SlotActions({
+  slot,
+  active,
+  onEdit,
+  onBush,
+  onMoving,
+}: {
+  slot: Slot
+  active: boolean
+  onEdit: () => void
+  onBush: () => void
+  onMoving: () => void
+}) {
   const { t } = useI18n()
   const inBush = slot.situation.bush !== "none"
+  const moving = slot.situation.moving
   return (
     <>
+      <button
+        type="button"
+        onClick={onMoving}
+        aria-pressed={moving}
+        title={t.spot.situation.moving}
+        aria-label={t.spot.situation.moving}
+        className={cn(
+          "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+          moving
+            ? "border-amber-400/50 bg-amber-400/15 text-amber-300"
+            : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+        )}
+      >
+        <Gauge className="size-4" aria-hidden="true" />
+      </button>
       <button
         type="button"
         onClick={onBush}
@@ -274,7 +318,13 @@ function SlotActions({ slot, onEdit, onBush }: { slot: Slot; onEdit: () => void;
       <button
         type="button"
         onClick={onEdit}
-        className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        aria-pressed={active}
+        className={cn(
+          "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+          active
+            ? "border-primary bg-primary text-primary-foreground shadow-[0_0_12px_-2px] shadow-primary/60 hover:bg-primary/90"
+            : "border-border hover:bg-muted",
+        )}
       >
         <SlidersHorizontal className="size-4" aria-hidden="true" />
         <span className="hidden sm:inline">{t.spot.configure}</span>
