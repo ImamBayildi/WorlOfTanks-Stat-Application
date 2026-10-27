@@ -129,8 +129,8 @@ export function LoadoutSheet({
   const cvsBlocked = full && !l.commandersVision
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-md">
+    <Sheet open={open} onOpenChange={onOpenChange} modal={false} disablePointerDismissal>
+      <SheetContent showOverlay={false} side="right" className="w-full gap-0 overflow-y-auto sm:max-w-md">
         <SheetHeader className="border-b border-border">
           <SheetTitle>{t.spot.configTitle(name)}</SheetTitle>
           <SheetDescription>{t.spot.configDescription}</SheetDescription>

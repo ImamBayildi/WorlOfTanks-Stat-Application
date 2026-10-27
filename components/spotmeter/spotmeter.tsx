@@ -163,7 +163,7 @@ export function Spotmeter() {
             </div>
             <SlotActions
               slot={observer}
-              onEdit={() => setEditing(observer.id)}
+              onEdit={() => setEditing((cur) => (cur === observer.id ? null : observer.id))}
               onBush={() => toggleBush(observer)}
               onMoving={() => toggleMoving(observer)}
             />
@@ -205,7 +205,7 @@ export function Spotmeter() {
                       </div>
                       <SlotActions
                         slot={slot}
-                        onEdit={() => setEditing(slot.id)}
+                        onEdit={() => setEditing((cur) => (cur === slot.id ? null : slot.id))}
                         onBush={() => toggleBush(slot)}
                         onMoving={() => toggleMoving(slot)}
                       />
