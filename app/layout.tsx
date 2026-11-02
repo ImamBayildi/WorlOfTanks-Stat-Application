@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { SiteHeader } from "@/components/site-header"
 import { I18nProvider } from "@/components/i18n-provider"
+import { FeedbackWidget } from "@/components/feedback-widget"
 import { getI18n } from "@/lib/i18n/server"
 import "./globals.css"
 
@@ -47,6 +48,7 @@ export default async function RootLayout({
             <SiteHeader />
             {children}
             <footer className="mx-auto w-full max-w-6xl px-4 py-10 text-xs text-muted-foreground">{t.footer}</footer>
+            <FeedbackWidget />
           </TooltipProvider>
         </I18nProvider>
         {process.env.NODE_ENV === "production" && <Analytics />}
