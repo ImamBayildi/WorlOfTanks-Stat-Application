@@ -1,0 +1,36 @@
+name: Player crawler
+
+on:
+  schedule:
+    # Every 4 hours. Private repos get 2,000 free Actions minutes/month: 6 runs x ~11 min = ~2,000.
+    # If the repo is made public, minutes are unlimited — increase frequency and CRAWL_MINUTES.
+    - cron: "17 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Run length in minutes"
+        default: "10"
+
+concurrency:
+  group: crawler
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm crawl
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          WARGAMING_APPLICATION_ID: ${{ secrets.WARGAMING_APPLICATION_ID }}
+          CRAWL_REGIONS: ${{ vars.CRAWL_REGIONS || 'eu' }}
+          CRAWL_MINUTES: ${{ inputs.minutes || vars.CRAWL_MINUTES || '10' }}
+          WG_RPS: ${{ vars.WG_RPS || '10' }}

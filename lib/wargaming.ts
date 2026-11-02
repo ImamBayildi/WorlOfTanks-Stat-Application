@@ -57,9 +57,9 @@ const getVehicles = cache(async (region: Region) => {
   )
 })
 
-type Wn8ExpMap = Map<number, { damage: number; frags: number; spots: number; def: number; winRate: number }>
+export type Wn8ExpMap = Map<number, { damage: number; frags: number; spots: number; def: number; winRate: number }>
 
-const getWn8Expected = cache(async (): Promise<Wn8ExpMap> => {
+export const getWn8Expected = cache(async (): Promise<Wn8ExpMap> => {
   const map: Wn8ExpMap = new Map()
   try {
     const res = await fetch("https://static.modxvm.com/wn8-data-exp/json/wn8exp.json", {
@@ -84,7 +84,7 @@ const getWn8Expected = cache(async (): Promise<Wn8ExpMap> => {
   return map
 })
 
-const wnxExpected = wnxExpectedRaw as unknown as Record<string, [number, number, number, number]>
+export const wnxExpected = wnxExpectedRaw as unknown as Record<string, [number, number, number, number]>
 
 interface RawTankStat {
   tank_id: number

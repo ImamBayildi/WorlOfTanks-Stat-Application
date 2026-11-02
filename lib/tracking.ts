@@ -1,9 +1,16 @@
 import { and, asc, eq, lt, sql } from "drizzle-orm"
 import { db } from "@/lib/db"
-import { players, playerSnapshots, type CompactTank } from "@/lib/db/schema"
+import { buildAgg, periodFromAgg, pickAggBaseline, utcDay, type AggSnapshot } from "@/lib/aggregate"
+import { accountSnapshots, crawlAccounts, players, playerSnapshots, type CompactTank } from "@/lib/db/schema"
 import type { Totals } from "@/lib/ratings"
 import type { PeriodKey, PeriodStats, PlayerData, Region } from "@/lib/types"
-import { compactToTotals, computeRatingsFromTotals, getPlayerBundle } from "@/lib/wargaming"
+import {
+  compactToTotals,
+  computeRatingsFromTotals,
+  getPlayerBundle,
+  getWn8Expected,
+  wnxExpected,
+} from "@/lib/wargaming"
 
 const HOUR = 3600 * 1000
 const DAY = 24 * HOUR
@@ -122,9 +129,51 @@ async function trackPlayer(region: Region, player: PlayerData, compact: CompactT
     .where(where)
     .orderBy(asc(playerSnapshots.capturedAt))
 
-  const periods = await Promise.all(PERIODS.map((p) => buildPeriod(p.key, p.ms, compact, history, now)))
+  const [wn8Exp, aggRows] = await Promise.all([
+    getWn8Expected(),
+    db
+      .select({ day: accountSnapshots.day, capturedAt: accountSnapshots.capturedAt, agg: accountSnapshots.agg })
+      .from(accountSnapshots)
+      .where(and(eq(accountSnapshots.region, region), eq(accountSnapshots.accountId, player.accountId)))
+      .orderBy(asc(accountSnapshots.day)),
+  ])
+  const today = utcDay(now)
+  const currentAgg = buildAgg(compact, wn8Exp, wnxExpected)
+  const aggHistory: AggSnapshot[] = aggRows.filter((r) => r.day < today)
 
-  const writes: Promise<unknown>[] = []
+  const periods = await Promise.all(
+    PERIODS.map(async (p) => {
+      const exact = await buildPeriod(p.key, p.ms, compact, history, now)
+      if (!exact.partial) return exact
+      // Fall back to the crawler's daily snapshots when they reach further back than per-tank history.
+      const { baseline, partial } = pickAggBaseline(p.key, p.ms, aggHistory, now)
+      if (baseline && (exact.since == null || baseline.capturedAt.getTime() / 1000 < exact.since)) {
+        return periodFromAgg(p.key, currentAgg, baseline, partial)
+      }
+      return exact
+    }),
+  )
+
+  const writes: Promise<unknown>[] = [
+    db
+      .insert(accountSnapshots)
+      .values({ region, accountId: player.accountId, day: today, agg: currentAgg })
+      .onConflictDoUpdate({
+        target: [accountSnapshots.region, accountSnapshots.accountId, accountSnapshots.day],
+        set: { agg: currentAgg, capturedAt: new Date(now) },
+      }),
+    db
+      .insert(crawlAccounts)
+      .values({
+        region,
+        accountId: player.accountId,
+        nickname: player.nickname,
+        battles: player.summary.battles,
+        lastBattleAt: new Date(player.lastBattleAt * 1000),
+        nextCheckAt: new Date(now + 10 * HOUR),
+      })
+      .onConflictDoNothing(),
+  ]
   if (shouldSnapshot(history.at(-1), player.summary.battles, now)) {
     writes.push(
       db.insert(playerSnapshots).values({
