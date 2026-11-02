@@ -63,6 +63,8 @@ export interface PlayerData {
   summary: PlayerSummary
   tanks: TankRow[]
   periods: PeriodStats[] | null
+  /** Unix seconds when a manual refresh is allowed again; null/undefined when allowed now. */
+  nextRefreshAt?: number | null
 }
 
 export type PeriodKey = "day" | "week" | "month"

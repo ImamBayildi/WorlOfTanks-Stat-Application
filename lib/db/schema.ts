@@ -62,6 +62,7 @@ export const crawlAccounts = pgTable(
     battles: integer("battles").notNull().default(-1),
     lastBattleAt: timestamp("last_battle_at", { withTimezone: true }),
     nextCheckAt: timestamp("next_check_at", { withTimezone: true }).notNull().defaultNow(),
+    refreshedAt: timestamp("refreshed_at", { withTimezone: true }),
   },
   (t) => [primaryKey({ columns: [t.region, t.accountId] })],
 )

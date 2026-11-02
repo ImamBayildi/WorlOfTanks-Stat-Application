@@ -76,6 +76,9 @@ const tr = {
   player: {
     registered: "Kayıt",
     lastBattle: "Son savaş",
+    refresh: "Şimdi güncelle",
+    refreshing: "Güncelleniyor…",
+    refreshIn: (time: string) => `Tekrar güncelle: ${time}`,
     hidden: "Bu oyuncunun tank istatistikleri gizli. WN8 ve WNX hesaplanamıyor.",
     errorTitle: "Oyuncu verileri alınamadı",
     errorDefault: "Wargaming API şu anda yanıt vermiyor.",

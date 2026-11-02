@@ -78,6 +78,9 @@ const en: Dictionary = {
   player: {
     registered: "Joined",
     lastBattle: "Last battle",
+    refresh: "Update now",
+    refreshing: "Updating…",
+    refreshIn: (time: string) => `Update again in ${time}`,
     hidden: "This player's tank statistics are hidden. WN8 and WNX can't be calculated.",
     errorTitle: "Couldn't load player data",
     errorDefault: "The Wargaming API isn't responding right now.",

@@ -1,6 +1,6 @@
 import { and, asc, eq, lt, sql } from "drizzle-orm"
 import { db } from "@/lib/db"
-import { buildAgg, periodFromAgg, pickAggBaseline, utcDay, type AggSnapshot } from "@/lib/aggregate"
+import { buildFastAgg, periodFromAgg, pickAggBaseline, utcDay, type AggSnapshot } from "@/lib/aggregate"
 import { accountSnapshots, crawlAccounts, players, playerSnapshots, type CompactTank } from "@/lib/db/schema"
 import type { Totals } from "@/lib/ratings"
 import type { PeriodKey, PeriodStats, PlayerData, Region } from "@/lib/types"
@@ -138,7 +138,25 @@ async function trackPlayer(region: Region, player: PlayerData, compact: CompactT
       .orderBy(asc(accountSnapshots.day)),
   ])
   const today = utcDay(now)
-  const currentAgg = buildAgg(compact, wn8Exp, wnxExpected)
+  const totals = compact.reduce(
+    (s, [, battles, wins, damage, frags, spots, def, assist]) => {
+      s.battles += battles
+      s.wins += wins
+      s.damage += damage
+      s.frags += frags
+      s.spots += spots
+      s.def += def
+      s.assist += assist
+      return s
+    },
+    { battles: 0, wins: 0, damage: 0, frags: 0, spots: 0, def: 0, assist: 0 },
+  )
+  const currentAgg = buildFastAgg(
+    totals,
+    compact.map((t) => [t[0], t[1]]),
+    wn8Exp,
+    wnxExpected,
+  )
   const aggHistory: AggSnapshot[] = aggRows.filter((r) => r.day < today)
 
   const periods = await Promise.all(
@@ -222,18 +240,52 @@ async function trackPlayer(region: Region, player: PlayerData, compact: CompactT
   return periods
 }
 
+export const REFRESH_COOLDOWN_MS = 10 * 60 * 1000
+
+async function getNextRefreshAt(region: Region, accountId: number) {
+  const [row] = await db
+    .select({ refreshedAt: crawlAccounts.refreshedAt })
+    .from(crawlAccounts)
+    .where(and(eq(crawlAccounts.region, region), eq(crawlAccounts.accountId, accountId)))
+  const next = row?.refreshedAt ? row.refreshedAt.getTime() + REFRESH_COOLDOWN_MS : 0
+  return next > Date.now() ? Math.floor(next / 1000) : null
+}
+
 export async function getTrackedPlayer(region: Region, accountId: number): Promise<PlayerData | null> {
   const bundle = await getPlayerBundle(region, accountId)
   if (!bundle) return null
   const { player, compact } = bundle
-  if (!compact) return player
 
   try {
-    return { ...player, periods: await trackPlayer(region, player, compact) }
+    const [periods, nextRefreshAt] = await Promise.all([
+      compact ? trackPlayer(region, player, compact) : Promise.resolve(null),
+      getNextRefreshAt(region, accountId),
+    ])
+    return { ...player, periods, nextRefreshAt }
   } catch (error) {
     console.error("[tracking] failed to compute period stats", error)
     return player
   }
+}
+
+/**
+ * Claims the manual refresh slot for an account. Atomic, so the 10-minute cooldown holds across
+ * every visitor. Returns null on success, otherwise the unix time when refreshing is allowed again.
+ */
+export async function claimManualRefresh(region: Region, accountId: number): Promise<number | null> {
+  const claimed = await db
+    .update(crawlAccounts)
+    .set({ refreshedAt: new Date(), nextCheckAt: new Date(Date.now() + 3 * HOUR) })
+    .where(
+      and(
+        eq(crawlAccounts.region, region),
+        eq(crawlAccounts.accountId, accountId),
+        sql`(${crawlAccounts.refreshedAt} IS NULL OR ${crawlAccounts.refreshedAt} < now() - interval '10 minutes')`,
+      ),
+    )
+    .returning({ accountId: crawlAccounts.accountId })
+  if (claimed.length) return null
+  return (await getNextRefreshAt(region, accountId)) ?? Math.floor((Date.now() + REFRESH_COOLDOWN_MS) / 1000)
 }
 
 /** Refreshes the least recently updated tracked players (used by the daily cron). */

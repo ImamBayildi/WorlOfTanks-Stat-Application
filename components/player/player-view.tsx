@@ -4,6 +4,7 @@ import { useState } from "react"
 import { RatingToggle } from "@/components/rating-toggle"
 import { useI18n } from "@/components/i18n-provider"
 import { PlayerHeader } from "@/components/player/player-header"
+import { RefreshButton } from "@/components/player/refresh-button"
 import { RatingCards } from "@/components/player/rating-cards"
 import { StatsGrid } from "@/components/player/stats-grid"
 import { PeriodStats } from "@/components/player/period-stats"
@@ -27,7 +28,10 @@ export function PlayerView({ player, initialRating }: { player: PlayerData; init
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-10">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <PlayerHeader player={player} />
-        <RatingToggle value={rating} onChange={changeRating} />
+        <div className="flex flex-wrap items-center gap-3">
+          <RefreshButton region={player.region} accountId={player.accountId} nextRefreshAt={player.nextRefreshAt} />
+          <RatingToggle value={rating} onChange={changeRating} />
+        </div>
       </div>
 
       <RatingCards ratings={player.ratings} selected={rating} onSelect={changeRating} />

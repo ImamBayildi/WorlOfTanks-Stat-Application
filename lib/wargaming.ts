@@ -16,11 +16,16 @@ export function parseRegion(value: string | undefined | null): Region {
 
 export class WargamingError extends Error {}
 
+export function playerCacheTag(region: Region, accountId: number) {
+  return `player:${region}:${accountId}`
+}
+
 async function wgFetch<T>(
   region: Region,
   path: string,
   params: Record<string, string>,
   revalidate: number,
+  tags?: string[],
 ): Promise<T> {
   const appId = process.env.WARGAMING_APPLICATION_ID
   if (!appId) throw new WargamingError("WARGAMING_APPLICATION_ID ortam değişkeni tanımlı değil.")
@@ -29,7 +34,7 @@ async function wgFetch<T>(
   url.searchParams.set("application_id", appId)
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value)
 
-  const res = await fetch(url, { next: { revalidate } })
+  const res = await fetch(url, { next: { revalidate, tags } })
   if (!res.ok) throw new WargamingError(`Wargaming API hatası (${res.status}).`)
   const json = await res.json()
   if (json.status !== "ok") {
@@ -112,6 +117,7 @@ async function getTankStats(region: Region, accountId: number): Promise<RawTankS
         "tank_id,mark_of_mastery,random.battles,random.wins,random.damage_dealt,random.frags,random.spotted,random.dropped_capture_points,random.radio_assisted_damage,random.track_assisted_damage",
     },
     600,
+    [playerCacheTag(region, accountId)],
   )
   return data[String(accountId)] ?? null
 }
@@ -296,6 +302,7 @@ export const getPlayerBundle = cache(async (region: Region, accountId: number): 
           "nickname,global_rating,created_at,last_battle_time,clan_id,statistics.random,statistics.all.max_damage,statistics.all.max_frags,statistics.all.max_xp",
       },
       600,
+      [playerCacheTag(region, accountId)],
     ),
     getTankStats(region, accountId),
     getVehicles(region),

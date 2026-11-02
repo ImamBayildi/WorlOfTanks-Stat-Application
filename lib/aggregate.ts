@@ -89,6 +89,86 @@ export function buildAgg(
   return v
 }
 
+export interface AccountTotals {
+  battles: number
+  wins: number
+  damage: number
+  frags: number
+  spots: number
+  def: number
+  assist: number
+}
+
+/**
+ * Builds an Agg from account-level random-battle totals plus per-tank battle counts only. This is
+ * what lets the crawler update 100 players with two API calls (account/info + account/tanks)
+ * instead of one tanks/stats call per player. WN8 / WNx only need the sum of actual values and the
+ * sum of expected values weighted by battles per tank, so per-tank damage etc. is not required.
+ *
+ * Every account_snapshots row must be built with this function so period diffs stay consistent.
+ */
+export function buildFastAgg(
+  totals: AccountTotals,
+  tankBattles: [tankId: number, battles: number][],
+  wn8Exp: Wn8ExpMap,
+  wnxExp: Record<string, [number, number, number, number]>,
+): Agg {
+  const v: Agg = new Array(AGG_LENGTH).fill(0)
+  v[A.battles] = totals.battles
+  v[A.wins] = totals.wins
+  v[A.damage] = totals.damage
+  v[A.frags] = totals.frags
+  v[A.spots] = totals.spots
+  v[A.def] = totals.def
+  v[A.assist] = totals.assist
+  if (totals.battles <= 0) return v
+
+  // account/tanks counts every battle type; scale per-tank counts down to random battles.
+  const tankTotal = tankBattles.reduce((s, [, n]) => s + Math.max(n, 0), 0)
+  const scale = tankTotal > 0 ? Math.min(1, totals.battles / tankTotal) : 0
+
+  let w8Battles = 0
+  let wxBattles = 0
+  for (const [tankId, count] of tankBattles) {
+    if (count <= 0) continue
+    const n = count * scale
+    const e8 = wn8Exp.get(tankId)
+    if (e8) {
+      w8Battles += n
+      v[A.w8ExpWins] += (e8.winRate / 100) * n
+      v[A.w8ExpDamage] += e8.damage * n
+      v[A.w8ExpFrags] += e8.frags * n
+      v[A.w8ExpSpots] += e8.spots * n
+      v[A.w8ExpDef] += e8.def * n
+    }
+    const ex = wnxExp[String(tankId)]
+    if (ex) {
+      wxBattles += n
+      v[A.wxExpDamage] += ex[0] * n
+      v[A.wxExpFrags] += ex[1] * n
+      v[A.wxExpSpots] += ex[2] * n
+      v[A.wxExpAssist] += ex[3] * n
+    }
+  }
+
+  // Actual values are only known account-wide; attribute them proportionally to covered tanks.
+  const c8 = w8Battles / totals.battles
+  v[A.w8Battles] = w8Battles
+  v[A.w8Wins] = totals.wins * c8
+  v[A.w8Damage] = totals.damage * c8
+  v[A.w8Frags] = totals.frags * c8
+  v[A.w8Spots] = totals.spots * c8
+  v[A.w8Def] = totals.def * c8
+
+  const cx = wxBattles / totals.battles
+  v[A.wxBattles] = wxBattles
+  v[A.wxDamage] = totals.damage * cx
+  v[A.wxFrags] = totals.frags * cx
+  v[A.wxSpots] = totals.spots * cx
+  v[A.wxAssist] = totals.assist * cx
+  return v
+}
+
 export function aggRatings(v: Agg) {
   const wn8 =
     v[A.w8Battles] > 0

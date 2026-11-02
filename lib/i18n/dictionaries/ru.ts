@@ -77,6 +77,9 @@ const ru: Dictionary = {
   player: {
     registered: "Регистрация",
     lastBattle: "Последний бой",
+    refresh: "Обновить",
+    refreshing: "Обновление…",
+    refreshIn: (time: string) => `Обновить через ${time}`,
     hidden: "Статистика танков этого игрока скрыта. WN8 и WNX рассчитать нельзя.",
     errorTitle: "Не удалось загрузить данные игрока",
     errorDefault: "Wargaming API сейчас не отвечает.",

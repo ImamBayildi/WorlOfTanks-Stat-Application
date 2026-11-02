@@ -2,14 +2,14 @@ name: Player crawler
 
 on:
   schedule:
-    # Every 4 hours. Private repos get 2,000 free Actions minutes/month: 6 runs x ~11 min = ~2,000.
-    # If the repo is made public, minutes are unlimited — increase frequency and CRAWL_MINUTES.
-    - cron: "17 */4 * * *"
+    # Public repo: Actions minutes are unlimited. Each run lasts ~2h50m and a new one starts every
+    # 3 hours, so the crawler is effectively always on. The concurrency group prevents overlap.
+    - cron: "7 */3 * * *"
   workflow_dispatch:
     inputs:
       minutes:
         description: "Run length in minutes"
-        default: "10"
+        default: "170"
 
 concurrency:
   group: crawler
@@ -18,7 +18,7 @@ concurrency:
 jobs:
   crawl:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 185
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -32,5 +32,5 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           WARGAMING_APPLICATION_ID: ${{ secrets.WARGAMING_APPLICATION_ID }}
           CRAWL_REGIONS: ${{ vars.CRAWL_REGIONS || 'eu' }}
-          CRAWL_MINUTES: ${{ inputs.minutes || vars.CRAWL_MINUTES || '10' }}
+          CRAWL_MINUTES: ${{ inputs.minutes || vars.CRAWL_MINUTES || '170' }}
           WG_RPS: ${{ vars.WG_RPS || '10' }}

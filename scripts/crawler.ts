@@ -4,20 +4,29 @@
  *
  *  1. Discovery: sweeps the account ID space of each region 100 IDs at a time and queues every
  *     account that played within CRAWL_ACTIVE_DAYS.
- *  2. Update: re-checks queued accounts in batches of 100. Only accounts whose battle count changed
- *     cost an extra tanks/stats request; a daily aggregate snapshot is stored and the leaderboard
- *     row (day / week / month stats) is refreshed.
+ *  2. Update: re-checks queued accounts in batches of 100 (account/info). Accounts whose battle
+ *     count changed get their per-tank battle counts from a single batched account/tanks call, a
+ *     daily aggregate snapshot is stored and the leaderboard row (day / week / month) is refreshed.
+ *     Cost: ~2 requests per 100 players.
  *
  * Env: DATABASE_URL, WARGAMING_APPLICATION_ID
  * Optional: CRAWL_REGIONS (eu,com,asia), CRAWL_MINUTES (10), WG_RPS (10), CRAWL_ACTIVE_DAYS (30),
  *           CRAWL_MIN_BATTLES (100), CRAWL_WORKERS (4)
  */
-import { A, aggRatings, buildAgg, periodFromAgg, pickAggBaseline, utcDay, type AggSnapshot } from "@/lib/aggregate"
+import {
+  A,
+  aggRatings,
+  buildFastAgg,
+  periodFromAgg,
+  pickAggBaseline,
+  utcDay,
+  type AccountTotals,
+  type AggSnapshot,
+} from "@/lib/aggregate"
 import { pool } from "@/lib/db"
-import type { CompactTank } from "@/lib/db/schema"
 import { PERIODS } from "@/lib/tracking"
 import type { Region } from "@/lib/types"
-import { getWn8Expected, REGIONS, toCompact, wnxExpected, type Wn8ExpMap } from "@/lib/wargaming"
+import { getWn8Expected, REGIONS, wnxExpected, type Wn8ExpMap } from "@/lib/wargaming"
 
 const env = (key: string, fallback: string) => process.env[key] || fallback
 const REGION_LIST = env("CRAWL_REGIONS", "eu")
@@ -164,17 +173,44 @@ interface FullAccount {
   global_rating: number
   last_battle_time: number
   clan_id: number | null
-  statistics: { random: { battles: number; wins: number; damage_dealt: number } }
+  statistics: {
+    random: {
+      battles: number
+      wins: number
+      damage_dealt: number
+      frags: number
+      spotted: number
+      dropped_capture_points: number
+      radio_assisted_damage: number
+      track_assisted_damage: number
+    }
+  }
 }
 
-type RawTankStat = Parameters<typeof toCompact>[0][number]
+type AccountTanks = Record<string, { tank_id: number; statistics: { battles: number } }[] | null>
 
+const HOUR = 3600_000
+
+/** Active players are re-checked several times a day so each UTC day gets its own snapshot. */
 function nextCheckDelay(lastBattleAt: number) {
   const idle = Date.now() - lastBattleAt * 1000
-  if (idle < 2 * DAY) return 10 * 3600_000
-  if (idle < 7 * DAY) return DAY
-  if (idle < ACTIVE_DAYS * DAY) return 3 * DAY
-  return 7 * DAY
+  if (idle < 2 * DAY) return 3 * HOUR
+  if (idle < 7 * DAY) return 8 * HOUR
+  if (idle < ACTIVE_DAYS * DAY) return DAY
+  return 4 * DAY
+}
+
+function totalsOf(acc: FullAccount): AccountTotals {
+  const r = acc.statistics.random
+  return {
+    battles: r.battles,
+    wins: r.wins,
+    damage: r.damage_dealt,
+    frags: r.frags,
+    spots: r.spotted,
+    def: r.dropped_capture_points,
+    assist: r.radio_assisted_damage + r.track_assisted_damage,
+  }
 }
 
 async function updateBatch(region: Region, wn8Exp: Wn8ExpMap) {
@@ -185,8 +221,13 @@ async function updateBatch(region: Region, wn8Exp: Wn8ExpMap) {
   const info = await wg<Record<string, FullAccount | null>>(region, "account/info", {
     account_id: ids.join(","),
     extra: "statistics.random",
-    fields:
-      "nickname,global_rating,last_battle_time,clan_id,statistics.random.battles,statistics.random.wins,statistics.random.damage_dealt",
+    fields: [
+      "nickname,global_rating,last_battle_time,clan_id",
+      ...["battles", "wins", "damage_dealt", "frags", "spotted", "dropped_capture_points"],
+      ...["radio_assisted_damage", "track_assisted_damage"],
+    ]
+      .map((f, i) => (i === 0 ? f : `statistics.random.${f}`))
+      .join(","),
   })
 
   const gone = ids.filter((id) => !info[String(id)])
@@ -197,19 +238,14 @@ async function updateBatch(region: Region, wn8Exp: Wn8ExpMap) {
   const alive = queued.filter((q) => info[q.account_id])
   const changed = alive.filter((q) => q.battles !== info[q.account_id]!.statistics.random.battles)
 
-  const [tankResults, clans] = await Promise.all([
-    Promise.all(
-      changed.map(async (q) => {
-        const data = await wg<Record<string, RawTankStat[] | null>>(region, "tanks/stats", {
-          account_id: q.account_id,
-          extra: "random",
-          fields:
-            "tank_id,mark_of_mastery,random.battles,random.wins,random.damage_dealt,random.frags,random.spotted,random.dropped_capture_points,random.radio_assisted_damage,random.track_assisted_damage",
+  // One account/tanks call covers up to 100 players, replacing a tanks/stats call per player.
+  const [tankData, clans] = await Promise.all([
+    changed.length
+      ? wg<AccountTanks>(region, "account/tanks", {
+          account_id: changed.map((q) => q.account_id).join(","),
+          fields: "tank_id,statistics.battles",
         }).catch(() => null)
-        const raw = data?.[q.account_id]
-        return [q.account_id, raw ? toCompact(raw) : null] as const
-      }),
-    ),
+      : null,
     changed.length
       ? wg<Record<string, { clan: { tag: string } | null } | null>>(region, "clans/accountinfo", {
           account_id: changed.map((q) => q.account_id).join(","),
@@ -218,7 +254,6 @@ async function updateBatch(region: Region, wn8Exp: Wn8ExpMap) {
         }).catch(() => null)
       : null,
   ])
-  const tanks = new Map<string, CompactTank[] | null>(tankResults)
 
   const history = new Map<string, AggSnapshot[]>()
   if (alive.length) {
@@ -240,10 +275,19 @@ async function updateBatch(region: Region, wn8Exp: Wn8ExpMap) {
   for (const q of alive) {
     const acc = info[q.account_id]!
     const snaps = history.get(q.account_id) ?? []
-    const compact = tanks.get(q.account_id)
-    const fresh = compact ? buildAgg(compact, wn8Exp, wnxExpected) : null
+    const isChanged = changed.includes(q)
+    const tanks = tankData?.[q.account_id]
+    const fresh = tanks
+      ? buildFastAgg(
+          totalsOf(acc),
+          tanks.map((t) => [t.tank_id, t.statistics.battles]),
+          wn8Exp,
+          wnxExpected,
+        )
+      : null
     const current = fresh ?? snaps.at(-1)?.agg
-    const hidden = changed.includes(q) && !compact
+    const failed = isChanged && tankData == null
+    const hidden = isChanged && tankData != null && !tanks
 
     await pool.query(
       `UPDATE crawl_accounts SET nickname = $3, battles = $4, last_battle_at = $5, next_check_at = $6
@@ -252,9 +296,9 @@ async function updateBatch(region: Region, wn8Exp: Wn8ExpMap) {
         region,
         q.account_id,
         acc.nickname,
-        hidden ? q.battles : acc.statistics.random.battles,
+        hidden || failed ? q.battles : acc.statistics.random.battles,
         new Date(acc.last_battle_time * 1000),
-        new Date(now + (hidden ? 7 * DAY : nextCheckDelay(acc.last_battle_time))),
+        new Date(now + (failed ? HOUR : hidden ? 7 * DAY : nextCheckDelay(acc.last_battle_time))),
       ],
     )
     stats.checked++
