@@ -1,4 +1,4 @@
-import { bigint, bigserial, integer, jsonb, pgTable, primaryKey, real, text, timestamp } from "drizzle-orm/pg-core"
+import { bigint, bigserial, date, doublePrecision, integer, jsonb, pgTable, primaryKey, real, text, timestamp } from "drizzle-orm/pg-core"
 
 export type CompactTank = [
   tankId: number,
@@ -38,6 +38,41 @@ export const players = pgTable(
   },
   (t) => [primaryKey({ columns: [t.region, t.accountId] })],
 )
+
+/** One row per player per UTC day with cumulative totals (see lib/aggregate.ts). Filled by the crawler and page views. */
+export const accountSnapshots = pgTable(
+  "account_snapshots",
+  {
+    region: text("region").notNull(),
+    accountId: bigint("account_id", { mode: "number" }).notNull(),
+    day: date("day", { mode: "string" }).notNull(),
+    capturedAt: timestamp("captured_at", { withTimezone: true }).notNull().defaultNow(),
+    agg: doublePrecision("agg").array().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.region, t.accountId, t.day] })],
+)
+
+/** Every active account the crawler knows about, whether or not it was ever searched on the site. */
+export const crawlAccounts = pgTable(
+  "crawl_accounts",
+  {
+    region: text("region").notNull(),
+    accountId: bigint("account_id", { mode: "number" }).notNull(),
+    nickname: text("nickname").notNull(),
+    battles: integer("battles").notNull().default(-1),
+    lastBattleAt: timestamp("last_battle_at", { withTimezone: true }),
+    nextCheckAt: timestamp("next_check_at", { withTimezone: true }).notNull().defaultNow(),
+    refreshedAt: timestamp("refreshed_at", { withTimezone: true }),
+  },
+  (t) => [primaryKey({ columns: [t.region, t.accountId] })],
+)
+
+export const crawlState = pgTable("crawl_state", {
+  key: text("key").primaryKey(),
+  cursor: bigint("cursor", { mode: "number" }).notNull(),
+  emptyStreak: integer("empty_streak").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+})
 
 export const playerSnapshots = pgTable("player_snapshots", {
   id: bigserial("id", { mode: "number" }).primaryKey(),

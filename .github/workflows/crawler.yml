@@ -1,0 +1,36 @@
+name: Player crawler
+
+on:
+  schedule:
+    # Public repo: Actions minutes are unlimited. Each run lasts ~2h50m and a new one starts every
+    # 3 hours, so the crawler is effectively always on. The concurrency group prevents overlap.
+    - cron: "7 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Run length in minutes"
+        default: "170"
+
+concurrency:
+  group: crawler
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 185
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm crawl
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          WARGAMING_APPLICATION_ID: ${{ secrets.WARGAMING_APPLICATION_ID }}
+          CRAWL_REGIONS: ${{ vars.CRAWL_REGIONS || 'eu' }}
+          CRAWL_MINUTES: ${{ inputs.minutes || vars.CRAWL_MINUTES || '170' }}
+          WG_RPS: ${{ vars.WG_RPS || '10' }}

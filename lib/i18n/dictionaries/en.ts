@@ -22,6 +22,26 @@ const en: Dictionary = {
   },
   footer:
     "Data comes from the Wargaming Public API and game client data. WN8 expected values from XVM, WNX expected values from tomato.gg. This site is not affiliated with Wargaming.",
+  feedback: {
+    open: "Send feedback",
+    title: "Feedback",
+    subtitle: "Report an error or bug, or share a suggestion.",
+    kindLabel: "Feedback type",
+    kinds: { bug: "Bug", error: "Error", suggestion: "Suggestion" },
+    messageLabel: "Message",
+    messagePlaceholder: "What happened, or what would you suggest?",
+    contactLabel: "Contact",
+    contactPlaceholder: "Email or nickname (optional)",
+    send: "Send",
+    sending: "Sending…",
+    thanks: "Thank you!",
+    thanksDetail: "Your feedback has been received.",
+    errors: {
+      invalid: "Please write a message of at least 5 characters.",
+      rateLimited: "Too many submissions, please try again later.",
+      server: "Could not send, please try again.",
+    },
+  },
   common: {
     battles: "Battles",
     battlesN: (n: string) => `${n} battles`,
@@ -78,6 +98,9 @@ const en: Dictionary = {
   player: {
     registered: "Joined",
     lastBattle: "Last battle",
+    refresh: "Update now",
+    refreshing: "Updating…",
+    refreshIn: (time: string) => `Update again in ${time}`,
     hidden: "This player's tank statistics are hidden. WN8 and WNX can't be calculated.",
     errorTitle: "Couldn't load player data",
     errorDefault: "The Wargaming API isn't responding right now.",

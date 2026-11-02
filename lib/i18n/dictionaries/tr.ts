@@ -20,6 +20,26 @@ const tr = {
   },
   footer:
     "Veriler Wargaming Public API ve oyun istemcisi verilerinden alınır. WN8 beklenen değerleri XVM, WNX beklenen değerleri tomato.gg kaynaklıdır. Bu site Wargaming ile bağlantılı değildir.",
+  feedback: {
+    open: "Geri bildirim gönder",
+    title: "Geri bildirim",
+    subtitle: "Hata, bug veya önerini bize ilet.",
+    kindLabel: "Bildirim türü",
+    kinds: { bug: "Bug", error: "Hata", suggestion: "Öneri" },
+    messageLabel: "Mesaj",
+    messagePlaceholder: "Ne oldu, ne önerirsin?",
+    contactLabel: "İletişim",
+    contactPlaceholder: "E-posta veya nick (isteğe bağlı)",
+    send: "Gönder",
+    sending: "Gönderiliyor…",
+    thanks: "Teşekkürler!",
+    thanksDetail: "Geri bildirimin bize ulaştı.",
+    errors: {
+      invalid: "Lütfen en az 5 karakterlik bir mesaj yaz.",
+      rateLimited: "Çok fazla gönderim yaptın, biraz sonra tekrar dene.",
+      server: "Gönderilemedi, lütfen tekrar dene.",
+    },
+  },
   common: {
     battles: "Savaş",
     battlesN: (n: string) => `${n} savaş`,
@@ -76,6 +96,9 @@ const tr = {
   player: {
     registered: "Kayıt",
     lastBattle: "Son savaş",
+    refresh: "Şimdi güncelle",
+    refreshing: "Güncelleniyor…",
+    refreshIn: (time: string) => `Tekrar güncelle: ${time}`,
     hidden: "Bu oyuncunun tank istatistikleri gizli. WN8 ve WNX hesaplanamıyor.",
     errorTitle: "Oyuncu verileri alınamadı",
     errorDefault: "Wargaming API şu anda yanıt vermiyor.",

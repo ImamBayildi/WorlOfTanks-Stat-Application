@@ -22,6 +22,26 @@ const ru: Dictionary = {
   },
   footer:
     "Данные получены из Wargaming Public API и файлов игрового клиента. Ожидаемые значения WN8 — XVM, WNX — tomato.gg. Сайт не связан с Wargaming.",
+  feedback: {
+    open: "Отправить отзыв",
+    title: "Обратная связь",
+    subtitle: "Сообщите об ошибке, баге или предложите идею.",
+    kindLabel: "Тип отзыва",
+    kinds: { bug: "Баг", error: "Ошибка", suggestion: "Идея" },
+    messageLabel: "Сообщение",
+    messagePlaceholder: "Что случилось или что вы предлагаете?",
+    contactLabel: "Контакт",
+    contactPlaceholder: "Email или ник (необязательно)",
+    send: "Отправить",
+    sending: "Отправка…",
+    thanks: "Спасибо!",
+    thanksDetail: "Ваш отзыв получен.",
+    errors: {
+      invalid: "Напишите сообщение длиной не менее 5 символов.",
+      rateLimited: "Слишком много отправок, попробуйте позже.",
+      server: "Не удалось отправить, попробуйте ещё раз.",
+    },
+  },
   common: {
     battles: "Бои",
     battlesN: (n: string) => `${n} боёв`,
@@ -77,6 +97,9 @@ const ru: Dictionary = {
   player: {
     registered: "Регистрация",
     lastBattle: "Последний бой",
+    refresh: "Обновить",
+    refreshing: "Обновление…",
+    refreshIn: (time: string) => `Обновить через ${time}`,
     hidden: "Статистика танков этого игрока скрыта. WN8 и WNX рассчитать нельзя.",
     errorTitle: "Не удалось загрузить данные игрока",
     errorDefault: "Wargaming API сейчас не отвечает.",
