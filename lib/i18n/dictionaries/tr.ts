@@ -121,7 +121,7 @@ const tr = {
       showTanks: (count: number) => `Oynanan tanklar (${count})`,
       hideTanks: "Tankları gizle",
       tankDetailsUnavailable: "Bu dönem için tank detayı bulunmuyor.",
-      wn8UnavailableNote: "—*: Bu tank için WN8 beklenen değerleri henüz yayımlanmadı; güvenilir WN8 hesaplanamaz.",
+      wn8UnavailableNote: "—*: Bu tank için güncel XVM Wargaming tablosunda beklenen değer bulunamadı; güvenilir WN8 hesaplanamaz.",
     },
     general: "Genel · Rastgele savaşlar",
     wdl: (w: string, l: string, d: string) => `${w} G · ${l} M · ${d} B`,

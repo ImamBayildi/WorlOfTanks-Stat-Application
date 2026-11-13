@@ -67,7 +67,7 @@ export type Wn8ExpMap = Map<number, { damage: number; frags: number; spots: numb
 export const getWn8Expected = cache(async (): Promise<Wn8ExpMap> => {
   const map: Wn8ExpMap = new Map()
   try {
-    const res = await fetch("https://static.modxvm.com/wn8-data-exp/json/wn8exp.json", {
+    const res = await fetch("https://static.modxvm.com/wn8-data-exp/json/wg/wn8exp.json", {
       next: { revalidate: 86400 },
     })
     if (!res.ok) return map

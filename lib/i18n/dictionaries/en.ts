@@ -123,7 +123,7 @@ const en: Dictionary = {
       showTanks: (count: number) => `Tanks played (${count})`,
       hideTanks: "Hide tanks",
       tankDetailsUnavailable: "Tank details aren't available for this period.",
-      wn8UnavailableNote: "—*: WN8 expected values haven't been published for this tank yet, so a reliable WN8 can't be calculated.",
+      wn8UnavailableNote: "—*: This tank has no expected values in the current XVM Wargaming table, so a reliable WN8 can't be calculated.",
     },
     general: "Overall · Random battles",
     wdl: (w: string, l: string, d: string) => `${w} W · ${l} L · ${d} D`,

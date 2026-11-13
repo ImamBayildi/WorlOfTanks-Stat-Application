@@ -122,7 +122,7 @@ const ru: Dictionary = {
       showTanks: (count: number) => `Сыгранные танки (${count})`,
       hideTanks: "Скрыть танки",
       tankDetailsUnavailable: "Детализация по танкам за этот период недоступна.",
-      wn8UnavailableNote: "—*: ожидаемые значения WN8 для этого танка ещё не опубликованы, поэтому надёжный расчёт невозможен.",
+      wn8UnavailableNote: "—*: для этого танка нет ожидаемых значений в актуальной таблице XVM Wargaming, поэтому надёжный расчёт WN8 невозможен.",
     },
     general: "Всего · Случайные бои",
     wdl: (w: string, l: string, d: string) => `${w} П · ${l} П · ${d} Н`,
