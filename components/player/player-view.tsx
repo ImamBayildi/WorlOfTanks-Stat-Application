@@ -42,7 +42,7 @@ export function PlayerView({ player, initialRating }: { player: PlayerData; init
         </p>
       )}
 
-      {player.periods && <PeriodStats periods={player.periods} />}
+      {player.periods && <PeriodStats periods={player.periods} tanks={player.tanks} />}
 
       <StatsGrid summary={player.summary} />
 

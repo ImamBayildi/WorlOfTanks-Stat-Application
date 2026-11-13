@@ -69,6 +69,14 @@ export interface PlayerData {
 
 export type PeriodKey = "day" | "week" | "month"
 
+export interface PeriodTankStats {
+  tankId: number
+  battles: number
+  winRate: number
+  avgDamage: number
+  wn8: number | null
+}
+
 export interface PeriodStats {
   key: PeriodKey
   /** Unix seconds of the baseline snapshot; null while data is still being collected. */
@@ -82,6 +90,8 @@ export interface PeriodStats {
   avgAssist: number | null
   wn8: number | null
   wnx: number | null
+  /** Per-tank diff for this period. Null when only an aggregate snapshot is available. */
+  tanks: PeriodTankStats[] | null
 }
 
 export type LeaderboardPeriod = "all" | "month" | "week"

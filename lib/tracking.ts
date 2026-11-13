@@ -81,6 +81,7 @@ async function buildPeriod(
     avgAssist: null,
     wn8: null,
     wnx: null,
+    tanks: baseline ? [] : null,
   }
   if (!baseline) return empty
 
@@ -108,6 +109,15 @@ async function buildPeriod(
     avgAssist: sum.assist / sum.battles,
     wn8: ratings.wn8,
     wnx: ratings.wnx,
+    tanks: entries
+      .map(({ tankId, totals }) => ({
+        tankId,
+        battles: totals.battles,
+        winRate: (totals.wins / totals.battles) * 100,
+        avgDamage: totals.damage / totals.battles,
+        wn8: ratings.perTank.get(tankId)?.wn8 ?? null,
+      }))
+      .sort((a, b) => b.battles - a.battles || (b.wn8 ?? -Infinity) - (a.wn8 ?? -Infinity)),
   }
 }
 

@@ -236,6 +236,7 @@ function emptyPeriod(key: PeriodKey, since: number | null, partial: boolean): Pe
     avgAssist: null,
     wn8: null,
     wnx: null,
+    tanks: null,
   }
 }
 
@@ -277,5 +278,6 @@ export function periodFromAgg(
     avgAssist: d[A.assist] / battles,
     wn8: ratings.wn8,
     wnx: ratings.wnx,
+    tanks: null,
   }
 }
