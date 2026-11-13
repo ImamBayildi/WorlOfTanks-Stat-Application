@@ -109,6 +109,7 @@ const ru: Dictionary = {
     notFoundText: "Такого аккаунта нет на этом сервере.",
     newSearch: "Новый поиск",
     periods: {
+      summary: "Сводка результатов",
       title: "Недавние результаты",
       note: "Рассчитано по снимкам Wotrate",
       day: "Последние 24 часа",

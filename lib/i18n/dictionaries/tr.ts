@@ -108,6 +108,7 @@ const tr = {
     notFoundText: "Bu hesap bu sunucuda mevcut değil.",
     newSearch: "Yeni arama yap",
     periods: {
+      summary: "Performans özeti",
       title: "Son dönem performansı",
       note: "Wotrate anlık görüntülerinden hesaplanır",
       day: "Son 24 saat",

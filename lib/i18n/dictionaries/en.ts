@@ -110,6 +110,7 @@ const en: Dictionary = {
     notFoundText: "This account doesn't exist on this server.",
     newSearch: "New search",
     periods: {
+      summary: "Performance summary",
       title: "Recent performance",
       note: "Calculated from Wotrate snapshots",
       day: "Last 24 hours",
