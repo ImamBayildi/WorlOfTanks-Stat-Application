@@ -4,7 +4,8 @@ import { Fragment, useState } from "react"
 import { CalendarDays, CalendarRange, ChevronDown, Clock3, Swords } from "lucide-react"
 import { useI18n } from "@/components/i18n-provider"
 import { RatingValue } from "@/components/rating-value"
-import { TANK_TYPE_SHORT, toRoman } from "@/lib/format"
+import { TankTypeIcon } from "@/components/tank-type-icon"
+import { toRoman } from "@/lib/format"
 import { getRatingColor, getScaleStep, type SCALES } from "@/lib/ratings"
 import { cn } from "@/lib/utils"
 import type { PeriodKey, PeriodStats as PeriodStatsData, TankRow } from "@/lib/types"
@@ -87,13 +88,21 @@ function TankBreakdown({ period, tankById }: { period: PeriodStatsData; tankById
                   <span className="h-6 w-10 shrink-0" />
                 )}
                 <div className="min-w-0">
-                  <p className={cn("truncate text-sm font-bold", tank?.isPremium && "text-primary")}>
-                    {tank?.name ?? `Tank #${row.tankId}`}
-                  </p>
-                  {tank && (
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">
-                      {toRoman(tank.tier)} · {TANK_TYPE_SHORT[tank.type]}
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    {tank && (
+                      <TankTypeIcon
+                        type={tank.type}
+                        nation={tank.nation}
+                        label={t.tankTypes[tank.type] ?? tank.type}
+                        className="size-4"
+                      />
+                    )}
+                    <p className={cn("truncate text-sm font-bold", tank?.isPremium && "text-primary")}>
+                      {tank?.name ?? `Tank #${row.tankId}`}
                     </p>
+                  </div>
+                  {tank && (
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">{toRoman(tank.tier)}</p>
                   )}
                 </div>
               </div>

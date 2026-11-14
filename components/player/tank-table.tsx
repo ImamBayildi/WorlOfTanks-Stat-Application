@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { RatingValue } from "@/components/rating-value"
+import { TankTypeIcon } from "@/components/tank-type-icon"
 import { useI18n } from "@/components/i18n-provider"
-import { TANK_TYPE_LABELS, TANK_TYPE_SHORT, toRoman } from "@/lib/format"
+import { TANK_TYPE_LABELS, toRoman } from "@/lib/format"
 import type { RatingKey } from "@/lib/ratings"
 import type { TankRow } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -153,10 +154,13 @@ export function TankTable({ tanks, rating }: { tanks: TankRow[]; rating: RatingK
                   ) : (
                     <span className="h-[22px] w-9" />
                   )}
+                  <TankTypeIcon
+                    type={t.type}
+                    nation={t.nation}
+                    label={dict.tankTypes[t.type] ?? t.type}
+                    className="size-[18px]"
+                  />
                   <span className={cn("font-medium", t.isPremium && "text-primary")}>{t.name}</span>
-                  <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-                    {TANK_TYPE_SHORT[t.type]}
-                  </span>
                 </div>
               </TableCell>
               <TableCell className="text-right font-mono text-muted-foreground">{toRoman(t.tier)}</TableCell>
