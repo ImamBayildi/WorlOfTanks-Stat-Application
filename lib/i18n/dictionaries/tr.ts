@@ -83,6 +83,7 @@ const tr = {
     searching: "Aranıyor…",
     results: "Oyuncu sonuçları",
     error: "Arama sırasında bir hata oluştu.",
+    sourceLimited: "Wargaming istek sınırına ulaştı. Bu Wargaming kaynaklı geçici bir durum; lütfen kısa süre sonra tekrar deneyin.",
     wgShort: "WoT Reyting",
   },
   home: {
@@ -102,6 +103,10 @@ const tr = {
     hidden: "Bu oyuncunun tank istatistikleri gizli. WN8 ve WNX hesaplanamıyor.",
     errorTitle: "Oyuncu verileri alınamadı",
     errorDefault: "Wargaming API şu anda yanıt vermiyor.",
+    sourceLimitedTitle: "Wargaming veri servisi geçici olarak yoğun",
+    sourceLimitedText: "Wargaming istek sınırına ulaşıldığı için yeni oyuncu verileri alınamadı. Bu durum Wargaming kaynaklıdır; kısa bir süre sonra tekrar deneyebilirsiniz.",
+    sourceStaleTitle: "Son başarılı veriler gösteriliyor",
+    sourceStaleText: (date: string) => `Wargaming yeni veri sağlayamadığı için oyuncunun son başarılı verileri gösteriliyor. Son başarılı güncelleme: ${date}.`,
     retry: "Tekrar dene",
     home: "Ana sayfa",
     notFoundTitle: "Oyuncu bulunamadı",

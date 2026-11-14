@@ -63,6 +63,8 @@ export interface PlayerData {
   summary: PlayerSummary
   tanks: TankRow[]
   periods: PeriodStats[] | null
+  /** Last successful Wargaming player-data response and whether its refresh is overdue. */
+  source?: { updatedAt: number; stale: boolean }
   /** Unix seconds when a manual refresh is allowed again; null/undefined when allowed now. */
   nextRefreshAt?: number | null
 }

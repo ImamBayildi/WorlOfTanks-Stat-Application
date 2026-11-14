@@ -1,4 +1,5 @@
 import { cache } from "react"
+import { unstable_cache } from "next/cache"
 import wnxExpectedRaw from "@/lib/data/wnx-expected.json"
 import type { CompactTank } from "@/lib/db/schema"
 import { calcWn8, calcWnx, type Totals } from "@/lib/ratings"
@@ -14,7 +15,23 @@ export function parseRegion(value: string | undefined | null): Region {
   return value === "com" || value === "asia" ? value : "eu"
 }
 
-export class WargamingError extends Error {}
+export class WargamingError extends Error {
+  constructor(
+    message: string,
+    readonly code: string = "WARGAMING_ERROR",
+  ) {
+    super(message)
+    this.name = "WargamingError"
+  }
+}
+
+type WgResult<T> = { data: T; fetchedAt: number }
+
+const WG_RETRYABLE_ERRORS = new Set(["REQUEST_LIMIT_EXCEEDED", "SOURCE_NOT_AVAILABLE"])
+const WG_RETRY_DELAYS = [0, 500, 1500]
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const isRetryableWgCode = (code: string) =>
+  WG_RETRYABLE_ERRORS.has(code) || code === "HTTP_429" || code.startsWith("HTTP_5") || code === "NETWORK_ERROR"
 
 export function playerCacheTag(region: Region, accountId: number) {
   return `player:${region}:${accountId}`
@@ -26,21 +43,54 @@ async function wgFetch<T>(
   params: Record<string, string>,
   revalidate: number,
   tags?: string[],
-): Promise<T> {
+): Promise<WgResult<T>> {
   const appId = process.env.WARGAMING_APPLICATION_ID
-  if (!appId) throw new WargamingError("WARGAMING_APPLICATION_ID ortam değişkeni tanımlı değil.")
-
-  const url = new URL(`https://${REGIONS[region].host}/wot/${path}/`)
-  url.searchParams.set("application_id", appId)
-  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value)
-
-  const res = await fetch(url, { next: { revalidate, tags } })
-  if (!res.ok) throw new WargamingError(`Wargaming API hatası (${res.status}).`)
-  const json = await res.json()
-  if (json.status !== "ok") {
-    throw new WargamingError(json.error?.message ?? "Wargaming API bilinmeyen hata.")
+  if (!appId) {
+    throw new WargamingError("WARGAMING_APPLICATION_ID ortam değişkeni tanımlı değil.", "MISSING_APPLICATION_ID")
   }
-  return json.data as T
+
+  const paramsKey = JSON.stringify(Object.entries(params).sort(([a], [b]) => a.localeCompare(b)))
+  const getSuccessfulResponse = unstable_cache(
+    async (): Promise<WgResult<T>> => {
+      const url = new URL(`https://${REGIONS[region].host}/wot/${path}/`)
+      url.searchParams.set("application_id", appId)
+      for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value)
+
+      let lastError: WargamingError | null = null
+      for (let attempt = 0; attempt < WG_RETRY_DELAYS.length; attempt++) {
+        if (WG_RETRY_DELAYS[attempt]) await sleep(WG_RETRY_DELAYS[attempt])
+        try {
+          const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(15_000) })
+          if (!res.ok) {
+            const error = new WargamingError(`Wargaming API hatası (${res.status}).`, `HTTP_${res.status}`)
+            if (res.status !== 429 && res.status < 500) throw error
+            lastError = error
+            continue
+          }
+
+          const json = await res.json()
+          if (json.status === "ok") return { data: json.data as T, fetchedAt: Date.now() }
+
+          const code = String(json.error?.message ?? "WARGAMING_ERROR")
+          const error = new WargamingError(code, code)
+          if (!isRetryableWgCode(code)) throw error
+          lastError = error
+        } catch (error) {
+          if (error instanceof WargamingError && !isRetryableWgCode(error.code)) {
+            throw error
+          }
+          lastError = error instanceof WargamingError
+            ? error
+            : new WargamingError("Wargaming API bağlantı hatası.", "NETWORK_ERROR")
+        }
+      }
+      throw lastError ?? new WargamingError("Wargaming API bilinmeyen hata.")
+    },
+    ["wg-success-v2", region, path, paramsKey],
+    { revalidate, tags },
+  )
+
+  return getSuccessfulResponse()
 }
 
 interface Vehicle {
@@ -54,12 +104,13 @@ interface Vehicle {
 }
 
 const getVehicles = cache(async (region: Region) => {
-  return wgFetch<Record<string, Vehicle>>(
+  const result = await wgFetch<Record<string, Vehicle>>(
     region,
     "encyclopedia/vehicles",
     { fields: "name,short_name,tier,type,nation,is_premium,images.small_icon" },
     86400,
   )
+  return result.data
 })
 
 export type Wn8ExpMap = Map<number, { damage: number; frags: number; spots: number; def: number; winRate: number }>
@@ -106,8 +157,8 @@ interface RawTankStat {
   }
 }
 
-async function getTankStats(region: Region, accountId: number): Promise<RawTankStat[] | null> {
-  const data = await wgFetch<Record<string, RawTankStat[] | null>>(
+async function getTankStats(region: Region, accountId: number) {
+  const result = await wgFetch<Record<string, RawTankStat[] | null>>(
     region,
     "tanks/stats",
     {
@@ -119,7 +170,7 @@ async function getTankStats(region: Region, accountId: number): Promise<RawTankS
     600,
     [playerCacheTag(region, accountId)],
   )
-  return data[String(accountId)] ?? null
+  return { stats: result.data[String(accountId)] ?? null, fetchedAt: result.fetchedAt }
 }
 
 function toTotals(r: RawTankStat["random"]): Totals {
@@ -225,12 +276,13 @@ interface RawAccountBrief {
 }
 
 export async function searchPlayers(region: Region, query: string): Promise<SearchResult[]> {
-  const list = await wgFetch<{ nickname: string; account_id: number }[]>(
+  const listResult = await wgFetch<{ nickname: string; account_id: number }[]>(
     region,
     "account/list",
     { search: query, limit: "10", type: "startswith" },
     300,
   )
+  const list = listResult.data
   if (!list.length) return []
 
   const info = await wgFetch<Record<string, RawAccountBrief | null>>(
@@ -242,7 +294,7 @@ export async function searchPlayers(region: Region, query: string): Promise<Sear
       fields: "global_rating,statistics.random.battles,statistics.random.wins",
     },
     300,
-  ).catch(() => ({}) as Record<string, RawAccountBrief | null>)
+  ).then((result) => result.data).catch(() => ({}) as Record<string, RawAccountBrief | null>)
 
   return list.map((p) => {
     const acc = info[String(p.account_id)]
@@ -291,7 +343,7 @@ export interface PlayerBundle {
 }
 
 export const getPlayerBundle = cache(async (region: Region, accountId: number): Promise<PlayerBundle | null> => {
-  const [info, stats, vehicles, wn8Exp, clan] = await Promise.all([
+  const [infoResult, tankResult, vehicles, wn8Exp, clanResult] = await Promise.all([
     wgFetch<Record<string, RawAccountFull | null>>(
       region,
       "account/info",
@@ -314,6 +366,10 @@ export const getPlayerBundle = cache(async (region: Region, accountId: number): 
       3600,
     ).catch(() => null),
   ])
+
+  const info = infoResult.data
+  const stats = tankResult.stats
+  const clan = clanResult?.data ?? null
 
   const acc = info[String(accountId)]
   if (!acc) return null
@@ -387,6 +443,10 @@ export const getPlayerBundle = cache(async (region: Region, accountId: number): 
     },
     tanks,
     periods: null,
+    source: {
+      updatedAt: Math.floor(Math.min(infoResult.fetchedAt, tankResult.fetchedAt) / 1000),
+      stale: Date.now() - Math.min(infoResult.fetchedAt, tankResult.fetchedAt) >= 600_000,
+    },
   }
 
   return { player, compact: stats ? toCompact(stats) : null }

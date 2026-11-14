@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { PlayerView } from "@/components/player/player-view"
+import { PlayerSourceUnavailable } from "@/components/player/source-status"
 import { parseRating } from "@/lib/ratings"
 import { getTrackedPlayer } from "@/lib/tracking"
-import { getPlayerBundle, parseRegion } from "@/lib/wargaming"
+import { getPlayerBundle, parseRegion, WargamingError } from "@/lib/wargaming"
 
 type Props = {
   params: Promise<{ region: string; id: string }>
@@ -19,7 +20,12 @@ async function resolve(params: Props["params"]) {
 
 async function load(params: Props["params"]) {
   const { region, accountId } = await resolve(params)
-  return getTrackedPlayer(region, accountId)
+  try {
+    return { player: await getTrackedPlayer(region, accountId), sourceError: null }
+  } catch (error) {
+    if (error instanceof WargamingError) return { player: null, sourceError: error.code }
+    throw error
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -33,7 +39,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PlayerPage({ params, searchParams }: Props) {
-  const [player, sp] = await Promise.all([load(params), searchParams])
+  const [{ player, sourceError }, sp] = await Promise.all([load(params), searchParams])
+  if (sourceError) return <PlayerSourceUnavailable requestLimited={sourceError === "REQUEST_LIMIT_EXCEEDED"} />
   if (!player) notFound()
   return <PlayerView player={player} initialRating={parseRating(sp.rating)} />
 }

@@ -182,6 +182,9 @@ async function trackPlayer(region: Region, player: PlayerData, compact: CompactT
     }),
   )
 
+  // Never advance snapshots or leaderboard timestamps with stale upstream data.
+  if (player.source?.stale) return periods
+
   const writes: Promise<unknown>[] = [
     db
       .insert(accountSnapshots)

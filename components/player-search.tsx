@@ -94,7 +94,9 @@ export function PlayerSearch({ size = "sm", className }: { size?: "sm" | "lg"; c
 
   let status: string | null = null
   if (trimmed.length < 3) status = t.search.minChars
-  else if (error) status = error.message || t.search.error
+  else if (error) {
+    status = error.message === "REQUEST_LIMIT_EXCEEDED" ? t.search.sourceLimited : error.message || t.search.error
+  }
   else if (!pending && !results.length && data) status = t.search.notFound(debounced)
   else if (pending && !results.length) status = t.search.searching
 

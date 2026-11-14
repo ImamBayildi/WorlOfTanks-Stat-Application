@@ -1,6 +1,6 @@
 "use server"
 
-import { updateTag } from "next/cache"
+import { revalidateTag } from "next/cache"
 import { claimManualRefresh } from "@/lib/tracking"
 import type { Region } from "@/lib/types"
 import { playerCacheTag, REGIONS } from "@/lib/wargaming"
@@ -13,6 +13,6 @@ export async function refreshPlayer(region: string, accountId: number): Promise<
   }
   const retryAt = await claimManualRefresh(region as Region, accountId)
   if (retryAt) return { ok: false, retryAt }
-  updateTag(playerCacheTag(region as Region, accountId))
+  revalidateTag(playerCacheTag(region as Region, accountId), "max")
   return { ok: true }
 }

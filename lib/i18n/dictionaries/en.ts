@@ -85,6 +85,7 @@ const en: Dictionary = {
     searching: "Searching…",
     results: "Player results",
     error: "Something went wrong while searching.",
+    sourceLimited: "Wargaming's request limit has been reached. This is a temporary Wargaming issue; please try again shortly.",
     wgShort: "WoT Rating",
   },
   home: {
@@ -104,6 +105,10 @@ const en: Dictionary = {
     hidden: "This player's tank statistics are hidden. WN8 and WNX can't be calculated.",
     errorTitle: "Couldn't load player data",
     errorDefault: "The Wargaming API isn't responding right now.",
+    sourceLimitedTitle: "Wargaming's data service is temporarily busy",
+    sourceLimitedText: "Fresh player data couldn't be loaded because Wargaming's request limit was reached. This issue is on Wargaming's side; please try again shortly.",
+    sourceStaleTitle: "Showing the last successful data",
+    sourceStaleText: (date: string) => `Wargaming couldn't provide fresh data, so the player's last successful data is shown. Last successful update: ${date}.`,
     retry: "Try again",
     home: "Home",
     notFoundTitle: "Player not found",
