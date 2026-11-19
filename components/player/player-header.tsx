@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarDays, Clock } from "lucide-react"
+import { CalendarDays, Clock, History } from "lucide-react"
 import { useI18n } from "@/components/i18n-provider"
 import type { PlayerData } from "@/lib/types"
 
@@ -30,6 +30,12 @@ export function PlayerHeader({ player }: { player: PlayerData }) {
           <CalendarDays className="size-3.5" aria-hidden="true" />
           {`${t.player.registered}: ${f.date(player.createdAt)}`}
         </span>
+        {player.source?.updatedAt && (
+          <span className="flex items-center gap-1.5 text-foreground/80">
+            <History className="size-3.5" aria-hidden="true" />
+            {`${t.player.lastUpdated}: ${f.dateTime(player.source.updatedAt)}`}
+          </span>
+        )}
         <span className="flex items-center gap-1.5">
           <Clock className="size-3.5" aria-hidden="true" />
           {`${t.player.lastBattle}: ${f.date(player.lastBattleAt)}`}

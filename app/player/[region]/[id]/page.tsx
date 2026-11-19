@@ -31,10 +31,14 @@ async function load(params: Props["params"]) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { region, accountId } = await resolve(params)
   const player = (await getPlayerBundle(region, accountId).catch(() => null))?.player
-  if (!player) return { title: "Player not found" }
+  if (!player) return { title: "Player not found", robots: { index: false, follow: false } }
+  const url = `/player/${region}/${accountId}`
+  const description = `${player.nickname} — WN8 ${player.ratings.wn8 ?? "—"}, WNX ${player.ratings.wnx ?? "—"}, WG ${player.ratings.wg ?? "—"}`
   return {
-    title: `${player.nickname} — Wotrate`,
-    description: `${player.nickname} — WN8 ${player.ratings.wn8 ?? "—"}, WNX ${player.ratings.wnx ?? "—"}, WG ${player.ratings.wg ?? "—"}`,
+    title: player.nickname,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title: `${player.nickname} — Wotrate`, description, url },
   }
 }
 

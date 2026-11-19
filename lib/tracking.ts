@@ -185,6 +185,10 @@ async function trackPlayer(region: Region, player: PlayerData, compact: CompactT
   // Never advance snapshots or leaderboard timestamps with stale upstream data.
   if (player.source?.stale) return periods
 
+  // Local design/QA sessions may share the production database. Keep period calculations
+  // available while preventing page views from creating or updating tracking rows.
+  if (process.env.WOTSTAT_READ_ONLY === "true") return periods
+
   const writes: Promise<unknown>[] = [
     db
       .insert(accountSnapshots)
@@ -286,6 +290,10 @@ export async function getTrackedPlayer(region: Region, accountId: number): Promi
  * every visitor. Returns null on success, otherwise the unix time when refreshing is allowed again.
  */
 export async function claimManualRefresh(region: Region, accountId: number): Promise<number | null> {
+  if (process.env.WOTSTAT_READ_ONLY === "true") {
+    return Math.floor((Date.now() + REFRESH_COOLDOWN_MS) / 1000)
+  }
+
   const claimed = await db
     .update(crawlAccounts)
     .set({ refreshedAt: new Date(), nextCheckAt: new Date(Date.now() + 3 * HOUR) })

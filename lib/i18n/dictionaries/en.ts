@@ -98,6 +98,7 @@ const en: Dictionary = {
   },
   player: {
     registered: "Joined",
+    lastUpdated: "Last updated",
     lastBattle: "Last battle",
     refresh: "Update now",
     refreshing: "Updating…",

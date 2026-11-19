@@ -63,11 +63,13 @@ async function sendEmail(data: { kind: string; message: string; contact: string;
 }
 
 export async function markFeedbackEmailed(id: string) {
+  if (process.env.WOTSTAT_READ_ONLY === "true") return
   if (!/^\d+$/.test(id)) return
   await pool.query(`UPDATE feedback SET emailed = true WHERE id = $1 AND created_at > now() - interval '5 minutes'`, [id])
 }
 
 export async function submitFeedback(formData: FormData): Promise<FeedbackResult> {
+  if (process.env.WOTSTAT_READ_ONLY === "true") return { ok: false, error: "server" }
   if (clean(formData.get("website"), 200)) return { ok: true }
 
   const kind = clean(formData.get("kind"), 20) as FeedbackKind

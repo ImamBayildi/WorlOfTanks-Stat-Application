@@ -7,7 +7,12 @@ import type { Region } from "@/lib/types"
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getI18n()
-  return { title: t.leaderboard.title, description: t.meta.ratingsDescription }
+  return {
+    title: t.leaderboard.title,
+    description: t.meta.ratingsDescription,
+    alternates: { canonical: "/reytingler" },
+    openGraph: { title: t.leaderboard.title, description: t.meta.ratingsDescription, url: "/reytingler" },
+  }
 }
 
 type Props = {

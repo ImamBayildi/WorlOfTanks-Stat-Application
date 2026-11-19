@@ -49,7 +49,14 @@ export function RefreshButton({
 
   const disabled = pending || remaining > 0
   return (
-    <Button variant="outline" size="sm" onClick={onClick} disabled={disabled} aria-live="polite">
+    <Button
+      variant="default"
+      size="default"
+      className="border-primary/50 bg-primary px-4 font-semibold shadow-[0_0_18px_-5px_var(--primary)] hover:bg-primary/90 hover:shadow-[0_0_22px_-3px_var(--primary)] focus-visible:ring-primary/50"
+      onClick={onClick}
+      disabled={disabled}
+      aria-live="polite"
+    >
       <RotateCw className={pending ? "size-4 animate-spin" : "size-4"} aria-hidden="true" />
       {pending ? t.player.refreshing : remaining > 0 ? t.player.refreshIn(formatRemaining(remaining)) : t.player.refresh}
     </Button>

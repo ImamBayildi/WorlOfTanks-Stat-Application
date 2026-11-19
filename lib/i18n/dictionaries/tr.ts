@@ -96,6 +96,7 @@ const tr = {
   },
   player: {
     registered: "Kayıt",
+    lastUpdated: "Son güncelleme",
     lastBattle: "Son savaş",
     refresh: "Şimdi güncelle",
     refreshing: "Güncelleniyor…",

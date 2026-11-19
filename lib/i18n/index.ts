@@ -19,10 +19,20 @@ export function createFormatter(locale: Locale) {
   const dec = new Intl.NumberFormat(tag, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const pct = new Intl.NumberFormat(tag, { style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const date = new Intl.DateTimeFormat(tag, { day: "numeric", month: "long", year: "numeric" })
+  const dateTime = new Intl.DateTimeFormat(tag, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Istanbul",
+    timeZoneName: "short",
+  })
   return {
     int: (v: number | null | undefined) => (v == null ? "—" : int.format(v)),
     dec: (v: number | null | undefined) => (v == null ? "—" : dec.format(v)),
     pct: (v: number | null | undefined) => (v == null ? "—" : pct.format(v / 100)),
     date: (unixSeconds: number | null | undefined) => (unixSeconds ? date.format(new Date(unixSeconds * 1000)) : "—"),
+    dateTime: (unixSeconds: number | null | undefined) => (unixSeconds ? dateTime.format(new Date(unixSeconds * 1000)) : "—"),
   }
 }

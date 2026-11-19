@@ -4,7 +4,12 @@ import { getI18n } from "@/lib/i18n/server"
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getI18n()
-  return { title: t.spot.title, description: t.meta.spotmeterDescription }
+  return {
+    title: t.spot.title,
+    description: t.meta.spotmeterDescription,
+    alternates: { canonical: "/spotmeter" },
+    openGraph: { title: t.spot.title, description: t.meta.spotmeterDescription, url: "/spotmeter" },
+  }
 }
 
 export default async function SpotmeterPage() {

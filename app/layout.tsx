@@ -12,12 +12,22 @@ const geist = Geist({ subsets: ["latin", "latin-ext", "cyrillic"], variable: "--
 const geistMono = Geist_Mono({ subsets: ["latin", "latin-ext", "cyrillic"], variable: "--font-geist-mono" })
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getI18n()
+  const { locale, t } = await getI18n()
   return {
+    metadataBase: new URL("https://wotrate.com"),
     title: { default: t.meta.title, template: "%s · Wotrate" },
     description: t.meta.description,
     applicationName: "Wotrate",
-    generator: "v0.app",
+    alternates: { canonical: "/" },
+    robots: { index: true, follow: true },
+    openGraph: {
+      type: "website",
+      siteName: "Wotrate",
+      title: t.meta.title,
+      description: t.meta.description,
+      url: "/",
+      locale: { tr: "tr_TR", en: "en_US", ru: "ru_RU" }[locale],
+    },
     icons: {
       icon: [
         { url: "/icon-light-32x32.png", media: "(prefers-color-scheme: light)" },

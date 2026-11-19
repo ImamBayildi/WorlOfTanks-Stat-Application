@@ -97,6 +97,7 @@ const ru: Dictionary = {
   },
   player: {
     registered: "Регистрация",
+    lastUpdated: "Обновлено",
     lastBattle: "Последний бой",
     refresh: "Обновить",
     refreshing: "Обновление…",

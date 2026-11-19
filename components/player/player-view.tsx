@@ -8,7 +8,6 @@ import { RefreshButton } from "@/components/player/refresh-button"
 import { RatingCards } from "@/components/player/rating-cards"
 import { StatsGrid } from "@/components/player/stats-grid"
 import { PeriodStats } from "@/components/player/period-stats"
-import { PlayerSourceWarning } from "@/components/player/source-status"
 import { TierBreakdown } from "@/components/player/tier-breakdown"
 import { TankTable } from "@/components/player/tank-table"
 import type { RatingKey } from "@/lib/ratings"
@@ -27,8 +26,6 @@ export function PlayerView({ player, initialRating }: { player: PlayerData; init
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-10">
-      {player.source?.stale && <PlayerSourceWarning updatedAt={player.source.updatedAt} />}
-
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <PlayerHeader player={player} />
         <div className="flex flex-wrap items-center gap-3">
