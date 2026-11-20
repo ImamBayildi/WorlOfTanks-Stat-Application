@@ -52,6 +52,9 @@ export default async function RootLayout({
   const { locale, t } = await getI18n()
   return (
     <html lang={locale} className={`dark ${geist.variable} ${geistMono.variable}`}>
+      <head>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317092926324469" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-dvh antialiased">
         <I18nProvider locale={locale}>
           <TooltipProvider>
