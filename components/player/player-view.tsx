@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { AdPlacement } from "@/components/ad-placement"
 import { RatingToggle } from "@/components/rating-toggle"
 import { useI18n } from "@/components/i18n-provider"
 import { PlayerHeader } from "@/components/player/player-header"
@@ -45,6 +46,7 @@ export function PlayerView({ player, initialRating }: { player: PlayerData; init
       {player.periods && <PeriodStats periods={player.periods} tanks={player.tanks} />}
 
       <StatsGrid summary={player.summary} />
+      {!player.hidden && <AdPlacement key={`${player.region}-${player.accountId}`} placement="player" />}
 
       {player.tanks.length > 0 && (
         <>

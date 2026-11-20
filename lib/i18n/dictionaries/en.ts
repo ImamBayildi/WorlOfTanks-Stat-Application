@@ -195,7 +195,7 @@ const en: Dictionary = {
     reasons: [
       { title: "Servers and database", text: "Infrastructure costs for daily stat updates and player history." },
       { title: "New features", text: "Per-tank analysis, clan statistics and more." },
-      { title: "Staying ad-free", text: "Keep Wotrate free and without ads." },
+      { title: "Free access", text: "Help keep Wotrate free for everyone with fewer ads." },
     ],
     formLabel: "Donation form",
     notConfigured: "Donations aren't configured right now.",

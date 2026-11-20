@@ -193,7 +193,7 @@ const tr = {
     reasons: [
       { title: "Sunucu ve veritabanı", text: "Günlük istatistik güncellemeleri ve oyuncu geçmişi için altyapı masrafları." },
       { title: "Yeni özellikler", text: "Tank bazlı analizler, klan istatistikleri ve daha fazlası." },
-      { title: "Reklamsız kalması", text: "Wotrate ücretsiz ve reklamsız kalmaya devam etsin." },
+      { title: "Ücretsiz erişim", text: "Wotrate'in herkes için ücretsiz ve reklam yoğunluğunun düşük kalmasına katkıda bulunun." },
     ],
     formLabel: "Bağış formu",
     notConfigured: "Bağış sistemi şu anda yapılandırılmamış.",

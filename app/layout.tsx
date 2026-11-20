@@ -1,4 +1,6 @@
 import { Analytics } from "@vercel/analytics/next"
+import Link from "next/link"
+import { ADSENSE_PUBLISHER_ID } from "@/lib/adsense"
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -53,14 +55,17 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={`dark ${geist.variable} ${geistMono.variable}`}>
       <head>
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317092926324469" crossOrigin="anonymous" />
+        {process.env.NODE_ENV === "production" && <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`} crossOrigin="anonymous" />}
       </head>
       <body className="min-h-dvh antialiased">
         <I18nProvider locale={locale}>
           <TooltipProvider>
             <SiteHeader />
             {children}
-            <footer className="mx-auto w-full max-w-6xl px-4 py-10 text-xs text-muted-foreground">{t.footer}</footer>
+            <footer className="mx-auto w-full max-w-6xl px-4 py-10 text-xs text-muted-foreground">
+              <p>{t.footer}</p>
+              <Link href="/privacy" className="mt-3 inline-block underline underline-offset-4">{{ tr: "Gizlilik ve çerezler", en: "Privacy and cookies", ru: "Конфиденциальность и cookie" }[locale]}</Link>
+            </footer>
             <FeedbackWidget />
           </TooltipProvider>
         </I18nProvider>

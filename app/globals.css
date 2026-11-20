@@ -91,3 +91,7 @@
     @apply bg-background text-foreground font-sans;
   }
 }
+
+/* Reserve the same space before and after the ad loads. */
+.wotrate-ad { width: 100%; height: 100px; }
+@media (min-width: 768px) { .wotrate-ad { height: 90px; } }

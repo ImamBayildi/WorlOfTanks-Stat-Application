@@ -1,4 +1,5 @@
 import { PlayerSearch } from "@/components/player-search"
+import { AdPlacement } from "@/components/ad-placement"
 import { RatingLegend } from "@/components/rating-legend"
 import { getI18n } from "@/lib/i18n/server"
 import Link from "next/link"
@@ -64,6 +65,7 @@ export default async function HomePage() {
         </div>
       </section>
       <RatingLegend />
+      <AdPlacement placement="home" />
       <section aria-labelledby="wotrate-guide" className="border-t border-border py-10">
         <h2 id="wotrate-guide" className="text-xl font-semibold">{guide.heading}</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-3">
