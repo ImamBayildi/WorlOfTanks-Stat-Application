@@ -40,7 +40,7 @@ export function AdPlacement({ placement }: { placement: "home" | "player" }) {
     <aside ref={container} aria-label={label} className="my-6 w-full border-y border-border py-4">
       <p className="mb-3 text-center text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
       {enabled ? <>
-        <ins ref={element} className="adsbygoogle wotrate-ad" style={{ display: "block" }} data-ad-client={publisher} data-ad-slot={slot} />
+        <ins ref={element} className="adsbygoogle wotrate-ad" style={{ display: "block" }} data-ad-client={publisher} data-ad-slot={slot} data-ad-format="auto" data-full-width-responsive="true" />
       </> : <div className="wotrate-ad flex items-center justify-center rounded-md border border-dashed border-border bg-card text-xs text-muted-foreground">
         {{ tr: "Reklam yerleşimi önizlemesi", en: "Ad placement preview", ru: "Предпросмотр рекламного места" }[locale]}
       </div>}
